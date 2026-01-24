@@ -137,10 +137,12 @@ const FeedbackStep = () => {
   const [comment, setComment] = useState("");
 
   const handleSubmit = () => {
-    if (!feeling) return;
+    // Default to 'good' if no feeling is selected to ensure completion
+    const submittedFeeling = feeling || 'good';
+    
     addHistory({
       date: new Date().toISOString(),
-      feeling,
+      feeling: submittedFeeling,
       comment
     });
     setLocation("/");
@@ -201,7 +203,6 @@ const FeedbackStep = () => {
 
        <Button 
          onClick={handleSubmit} 
-         disabled={!feeling}
          className="w-full h-12 mt-auto rounded-xl"
          data-testid="button-complete"
        >
