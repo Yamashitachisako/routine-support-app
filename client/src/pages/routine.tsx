@@ -28,6 +28,7 @@ const STEP_VIDEOS: Record<string, string> = {
   step2: "u5X5rJ8fW8g", // Eye exercises
   step3: "dEsYUEG9yxA", // Relaxing water/music (Updated)
   step4: "nqk3NW3sEFw", // Stretching
+  step5: "XgENmGTreU8", // Cool Down (New)
 };
 
 // Component for Steps 1-4
@@ -211,9 +212,9 @@ export default function Routine() {
   }
 
   const stepKey = `step${currentStepIndex + 1}`;
-  const isFeedback = currentStepIndex === 4;
+  const isFeedback = currentStepIndex === 5;
 
-  const progress = ((currentStepIndex + 1) / 5) * 100;
+  const progress = ((currentStepIndex + 1) / 6) * 100;
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -232,7 +233,7 @@ export default function Routine() {
         <div className="flex-1 space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground font-medium">
             <span>{t.step} {currentStepIndex + 1}</span>
-            <span>{t.of} 5</span>
+            <span>{t.of} 6</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>

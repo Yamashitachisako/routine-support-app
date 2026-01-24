@@ -146,8 +146,8 @@ export const translations: Record<Language, Translation> = {
         description: '動画の指示に従ってストレッチを行いましょう。筋肉をほぐし、柔軟性を高めます。',
       },
       step5: {
-        title: 'エクササイズ後の感想',
-        description: 'エクササイズを終えた今の気分を教えてください。',
+        title: 'クールダウン',
+        description: '深呼吸をして心拍数を整えましょう。リラックスしてルーティンを終了します。',
       },
     },
   },
@@ -218,8 +218,8 @@ export const translations: Record<Language, Translation> = {
         description: 'Follow the video instructions to perform stretching exercises. This helps loosen muscles and improve flexibility.',
       },
       step5: {
-        title: 'Check on "how do you feel" after the exercises',
-        description: 'Tell us how you feel after completing the exercises.',
+        title: 'Cool Down',
+        description: 'Take deep breaths and let your heart rate settle. Relax and finish the routine.',
       },
     },
   },
@@ -290,8 +290,8 @@ export const translations: Record<Language, Translation> = {
         description: '按照视频指示进行拉伸运动。这有助于放松肌肉并提高柔韧性。',
       },
       step5: {
-        title: '运动后感受检查',
-        description: '告诉我们完成运动后的感受。',
+        title: '放松运动',
+        description: '深呼吸,让心率平稳下来。放松并结束日常运动。',
       },
     },
   },

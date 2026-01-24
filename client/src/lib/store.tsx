@@ -49,7 +49,7 @@ const useBaseStore = create<AppState>()(
       }),
       
       nextStep: () => set((state) => ({ 
-        currentStepIndex: Math.min(state.currentStepIndex + 1, 4) 
+        currentStepIndex: Math.min(state.currentStepIndex + 1, 5) 
       })),
 
       prevStep: () => set((state) => ({
