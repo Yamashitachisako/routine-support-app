@@ -27,12 +27,9 @@ interface AppState {
   prevStep: () => void;
   exitRoutine: () => void;
   addHistory: (record: Omit<HistoryRecord, 'id'>) => void;
-  
-  // Computed
-  t: Translation;
 }
 
-export const useStore = create<AppState>()(
+const useBaseStore = create<AppState>()(
   persist(
     (set, get) => ({
       language: 'ja', 
@@ -74,10 +71,6 @@ export const useStore = create<AppState>()(
         currentStepIndex: 0,
         startTime: null
       })),
-
-      get t() {
-        return translations[get().language];
-      }
     }),
     {
       name: 'health-routine-storage',
@@ -89,3 +82,14 @@ export const useStore = create<AppState>()(
     }
   )
 );
+
+// Wrapper hook to inject translations dynamically
+export const useStore = () => {
+  const state = useBaseStore();
+  const t = translations[state.language];
+  
+  return {
+    ...state,
+    t
+  };
+};
