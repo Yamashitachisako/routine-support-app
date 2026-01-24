@@ -28,12 +28,21 @@ const STEP_VIDEOS: Record<string, string> = {
   step5: "XgENmGTreU8", // Cool Down
 };
 
+// Image paths for steps
+const STEP_IMAGES: Record<string, string> = {
+  step1: "/images/step1-wash.png",
+  step2: "/images/step2-eye.png",
+  step3: "/images/step3-water.png",
+  step4: "/images/step4-stretch.png",
+};
+
 // Component for Steps 1-4
 const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }) => {
   const { t } = useStore();
   // @ts-ignore - dynamic key access
   const stepData = t.steps[stepKey];
   const videoId = STEP_VIDEOS[stepKey];
+  const imagePath = STEP_IMAGES[stepKey];
   
   const [timeLeft, setTimeLeft] = useState(20);
   const [isActive, setIsActive] = useState(false);
@@ -54,9 +63,9 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Embedded Video */}
-      {videoId && (
-        <div className="w-full aspect-video bg-black rounded-2xl mb-6 overflow-hidden shadow-md relative">
+      {/* Visual Content: Video or Image */}
+      <div className="w-full aspect-video bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center">
+        {videoId ? (
           <iframe 
             width="100%" 
             height="100%" 
@@ -66,8 +75,18 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
             allowFullScreen
             className="absolute inset-0"
           ></iframe>
-        </div>
-      )}
+        ) : imagePath ? (
+           <img 
+             src={imagePath} 
+             alt={stepData.title}
+             className="w-full h-full object-cover"
+           />
+        ) : (
+          <div className="bg-secondary/30 w-full h-full flex items-center justify-center">
+             <span className="text-muted-foreground opacity-50">No Visual</span>
+          </div>
+        )}
+      </div>
       
       <div className="space-y-4 flex-1">
         <h2 className="text-2xl font-heading font-bold text-primary" data-testid={`text-step-title-${stepKey}`}>
@@ -124,7 +143,7 @@ const FeedbackStep = () => {
       feeling,
       comment
     });
-    setLocation("/history");
+    setLocation("/");
   };
 
   const feelings = [
