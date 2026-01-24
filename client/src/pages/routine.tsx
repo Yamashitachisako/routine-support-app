@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 const STEP_VIDEOS: Record<string, string> = {
   step1: "5oETkTtvgow", // Hand washing
   step2: "u5X5rJ8fW8g", // Eye exercises
-  step3: "tEmt1Znux58", // Relaxing water/music
+  step3: "dEsYUEG9yxA", // Relaxing water/music (Updated)
   step4: "nqk3NW3sEFw", // Stretching
 };
 
