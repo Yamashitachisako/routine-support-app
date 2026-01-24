@@ -41,35 +41,35 @@
   --font-heading: 'Outfit', sans-serif;
 }
 
-/* Light Theme - Soft Sage & Cream */
+/* Light Theme - Soft Red/Rose & Cream */
 :root {
-  --background: 40 20% 97%; /* Soft Cream */
-  --foreground: 145 20% 20%; /* Dark Green/Charcoal */
+  --background: 10 30% 98%; /* Warm Cream/Blush */
+  --foreground: 355 20% 25%; /* Warm Charcoal */
   
   --card: 0 0% 100%;
-  --card-foreground: 145 20% 20%;
+  --card-foreground: 355 20% 25%;
   
   --popover: 0 0% 100%;
-  --popover-foreground: 145 20% 20%;
+  --popover-foreground: 355 20% 25%;
   
-  --primary: 142 30% 40%; /* Sage Green */
+  --primary: 350 50% 60%; /* Soft Red / Rose */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 145 20% 90%; /* Light Sage Mist */
-  --secondary-foreground: 142 30% 30%;
+  --secondary: 350 30% 94%; /* Light Rose Mist */
+  --secondary-foreground: 350 40% 40%;
   
-  --muted: 145 10% 92%;
-  --muted-foreground: 145 10% 50%;
+  --muted: 350 10% 94%;
+  --muted-foreground: 350 10% 55%;
   
-  --accent: 200 40% 60%; /* Soft Blue */
+  --accent: 350 40% 70%; /* Lighter Rose/Pink */
   --accent-foreground: 0 0% 100%;
   
   --destructive: 0 60% 60%;
   --destructive-foreground: 0 0% 100%;
   
-  --border: 145 10% 85%;
-  --input: 145 10% 85%;
-  --ring: 142 30% 40%;
+  --border: 350 15% 88%;
+  --input: 350 15% 88%;
+  --ring: 350 50% 60%;
   
   --radius: 1rem;
 }
