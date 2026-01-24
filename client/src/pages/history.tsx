@@ -4,6 +4,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Smile, Meh, Frown, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ja, enUS, zhCN } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { getRoutineRecords } from "@/lib/api";
 
 const MoodIcon = ({ feeling }: { feeling: string }) => {
   switch (feeling) {
@@ -17,7 +19,12 @@ const MoodIcon = ({ feeling }: { feeling: string }) => {
 };
 
 export default function History() {
-  const { t, history, language } = useStore();
+  const { t, language } = useStore();
+
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ['routine-records'],
+    queryFn: getRoutineRecords,
+  });
 
   const getDateLocale = () => {
     switch (language) {
@@ -26,6 +33,14 @@ export default function History() {
       default: return enUS;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+        <p className="text-lg">{t.loading}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -46,15 +61,15 @@ export default function History() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-baseline mb-1">
-                      <h4 className="font-medium text-foreground">
-                        {format(new Date(record.date), 'PPP', { locale: getDateLocale() })}
-                      </h4>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(record.date), 'p', { locale: getDateLocale() })}
-                      </span>
+                      <div>
+                        <h4 className="font-medium text-foreground">{record.userName}</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(record.date), 'PPP p', { locale: getDateLocale() })}
+                        </span>
+                      </div>
                     </div>
                     {record.comment && (
-                      <p className="text-sm text-muted-foreground mt-1 bg-white/50 p-2 rounded-lg inline-block">
+                      <p className="text-sm text-muted-foreground mt-2 bg-white/50 p-2 rounded-lg inline-block">
                         "{record.comment}"
                       </p>
                     )}

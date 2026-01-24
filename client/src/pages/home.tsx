@@ -6,10 +6,17 @@ import { Play, Calendar, ChevronRight, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { getRoutineRecords } from "@/lib/api";
 
 export default function Home() {
-  const { t, startRoutine, history, userName, setUserName } = useStore();
+  const { t, startRoutine, userName, setUserName } = useStore();
   const [, setLocation] = useLocation();
+
+  const { data: history = [] } = useQuery({
+    queryKey: ['routine-records'],
+    queryFn: getRoutineRecords,
+  });
 
   const handleStart = () => {
     if (!userName.trim()) return;

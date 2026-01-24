@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createRoutineRecord } from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
 
 // Video IDs map
 const STEP_VIDEOS: Record<string, string> = {
@@ -131,21 +133,27 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
 
 // Component for Step 5 (Feedback)
 const FeedbackStep = () => {
-  const { t, addHistory, userName } = useStore();
+  const { t, userName, exitRoutine } = useStore();
   const [, setLocation] = useLocation();
   const [feeling, setFeeling] = useState<any>(null);
   const [comment, setComment] = useState("");
 
+  const createRecordMutation = useMutation({
+    mutationFn: createRoutineRecord,
+    onSuccess: () => {
+      exitRoutine();
+      setLocation("/");
+    },
+  });
+
   const handleSubmit = () => {
-    // Default to 'good' if no feeling is selected to ensure completion
     const submittedFeeling = feeling || 'good';
     
-    addHistory({
-      date: new Date().toISOString(),
+    createRecordMutation.mutate({
+      userName,
       feeling: submittedFeeling,
-      comment
+      comment: comment || undefined,
     });
-    setLocation("/");
   };
 
   const feelings = [
@@ -203,10 +211,11 @@ const FeedbackStep = () => {
 
        <Button 
          onClick={handleSubmit} 
+         disabled={createRecordMutation.isPending}
          className="w-full h-12 mt-auto rounded-xl"
          data-testid="button-complete"
        >
-         {t.complete}
+         {createRecordMutation.isPending ? t.loading : t.complete}
        </Button>
     </div>
   );
