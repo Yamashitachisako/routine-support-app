@@ -12,6 +12,7 @@ export interface HistoryRecord {
 interface AppState {
   language: Language;
   history: HistoryRecord[];
+  userName: string;
   
   // Routine State
   isRoutineActive: boolean;
@@ -20,6 +21,7 @@ interface AppState {
   
   // Actions
   setLanguage: (lang: Language) => void;
+  setUserName: (name: string) => void;
   startRoutine: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -33,13 +35,15 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      language: 'ja', // Default to Japanese as per the first key in translation file usually, or change to 'en'
+      language: 'ja', 
       history: [],
+      userName: '',
       isRoutineActive: false,
       currentStepIndex: 0,
       startTime: null,
 
       setLanguage: (lang) => set({ language: lang }),
+      setUserName: (name) => set({ userName: name }),
       
       startRoutine: () => set({ 
         isRoutineActive: true, 
@@ -77,7 +81,11 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'health-routine-storage',
-      partialize: (state) => ({ language: state.language, history: state.history }), // Only persist lang and history
+      partialize: (state) => ({ 
+        language: state.language, 
+        history: state.history,
+        userName: state.userName 
+      }),
     }
   )
 );

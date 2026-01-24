@@ -7,6 +7,9 @@ export interface Translation {
   todayProgress: string;
   completedTimes: string;
   settings: string;
+  enterName: string;
+  nameLabel: string;
+  namePlaceholder: string;
   
   // Routine Steps
   step: string;
@@ -35,6 +38,7 @@ export interface Translation {
   veryGood: string;
   optionalComment: string;
   complete: string;
+  greatJob: string;
   
   // Settings Screen
   language: string;
@@ -82,6 +86,9 @@ export const translations: Record<Language, Translation> = {
     todayProgress: '今日の進捗',
     completedTimes: '回完了',
     settings: '設定',
+    enterName: 'お名前を入力してください',
+    nameLabel: 'お名前',
+    namePlaceholder: 'お名前',
     
     step: 'ステップ',
     of: '/',
@@ -107,6 +114,7 @@ export const translations: Record<Language, Translation> = {
     veryGood: 'とても良い',
     optionalComment: 'コメント (任意)',
     complete: '完了',
+    greatJob: 'お疲れ様でした、',
     
     language: '言語',
     japanese: '日本語',
@@ -122,7 +130,7 @@ export const translations: Record<Language, Translation> = {
     
     steps: {
       step1: {
-        title: '帰宅後の手洗い',
+        title: '入室時の手洗い',
         description: '石鹸を使って、手のひら、手の甲、指の間、爪の下をしっかり洗いましょう。少なくとも20秒間洗い流してください。',
       },
       step2: {
@@ -150,6 +158,9 @@ export const translations: Record<Language, Translation> = {
     todayProgress: "Today's Progress",
     completedTimes: 'times completed',
     settings: 'Settings',
+    enterName: 'Please enter your name',
+    nameLabel: 'Name',
+    namePlaceholder: 'Your Name',
     
     step: 'Step',
     of: 'of',
@@ -175,6 +186,7 @@ export const translations: Record<Language, Translation> = {
     veryGood: 'Very Good',
     optionalComment: 'Comment (Optional)',
     complete: 'Complete',
+    greatJob: 'Great job, ',
     
     language: 'Language',
     japanese: '日本語',
@@ -190,7 +202,7 @@ export const translations: Record<Language, Translation> = {
     
     steps: {
       step1: {
-        title: 'Come back - wash hands',
+        title: 'Wash hands upon arrival',
         description: 'Use soap to thoroughly wash your palms, backs of hands, between fingers, and under nails. Rinse for at least 20 seconds.',
       },
       step2: {
@@ -218,6 +230,9 @@ export const translations: Record<Language, Translation> = {
     todayProgress: '今日进度',
     completedTimes: '次完成',
     settings: '设置',
+    enterName: '请输入您的名字',
+    nameLabel: '名字',
+    namePlaceholder: '您的名字',
     
     step: '步骤',
     of: '/',
@@ -243,6 +258,7 @@ export const translations: Record<Language, Translation> = {
     veryGood: '非常好',
     optionalComment: '评论 (可选)',
     complete: '完成',
+    greatJob: '辛苦了, ',
     
     language: '语言',
     japanese: '日本語',
@@ -258,7 +274,7 @@ export const translations: Record<Language, Translation> = {
     
     steps: {
       step1: {
-        title: '回家后洗手',
+        title: '进门洗手',
         description: '用肥皂彻底清洗手掌、手背、手指间和指甲下。至少冲洗20秒。',
       },
       step2: {

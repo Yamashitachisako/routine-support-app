@@ -16,18 +16,27 @@ import {
   Meh,
   Frown,
   ThumbsUp,
-  Star
+  Star,
+  Home
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+// Video IDs map
+const STEP_VIDEOS: Record<string, string> = {
+  step1: "5oETkTtvgow", // Hand washing
+  step2: "u5X5rJ8fW8g", // Eye exercises
+  step3: "tEmt1Znux58", // Relaxing water/music
+  step4: "nqk3NW3sEFw", // Stretching
+};
 
 // Component for Steps 1-4
 const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }) => {
   const { t } = useStore();
   // @ts-ignore - dynamic key access
   const stepData = t.steps[stepKey];
+  const videoId = STEP_VIDEOS[stepKey];
   
-  // Timer logic (mock 20s for hand washing, or just generic timer)
   const [timeLeft, setTimeLeft] = useState(20);
   const [isActive, setIsActive] = useState(false);
 
@@ -45,18 +54,20 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
 
   const toggleTimer = () => setIsActive(!isActive);
 
-  // Simple video placeholder
-  const VideoPlaceholder = () => (
-    <div className="w-full aspect-video bg-secondary/50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden relative group">
-      <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-accent/10" />
-      <Play className="h-12 w-12 text-primary opacity-50 group-hover:opacity-100 transition-opacity fill-current" />
-      <span className="sr-only">Play Video</span>
-    </div>
-  );
-
   return (
     <div className="flex flex-col h-full">
-      <VideoPlaceholder />
+      {/* Embedded Video */}
+      <div className="w-full aspect-video bg-black rounded-2xl mb-6 overflow-hidden shadow-md relative">
+        <iframe 
+          width="100%" 
+          height="100%" 
+          src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+          title={stepData.title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowFullScreen
+          className="absolute inset-0"
+        ></iframe>
+      </div>
       
       <div className="space-y-4 flex-1">
         <h2 className="text-2xl font-heading font-bold text-primary" data-testid={`text-step-title-${stepKey}`}>
@@ -66,8 +77,8 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
           {stepData.description}
         </p>
 
-        {/* Timer UI if applicable - let's show it for all action steps for now as a feature */}
-        <div className="mt-8 p-4 bg-white/50 rounded-xl border border-white/60 flex items-center justify-between">
+        {/* Timer UI */}
+        <div className="mt-4 p-4 bg-white/50 rounded-xl border border-white/60 flex items-center justify-between">
           <div className="flex items-center gap-3">
              <Clock className="h-5 w-5 text-accent" />
              <span className="font-mono text-xl font-medium text-foreground" data-testid="text-timer">
@@ -81,7 +92,7 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
             className={isActive ? "" : "bg-accent hover:bg-accent/90 text-white"}
             data-testid="button-timer-toggle"
           >
-            {isActive ? t.pause : t.startRoutine} {/* Reusing start string or resume */}
+            {isActive ? t.pause : t.startRoutine}
           </Button>
         </div>
       </div>
@@ -101,7 +112,7 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
 
 // Component for Step 5 (Feedback)
 const FeedbackStep = () => {
-  const { t, addHistory } = useStore();
+  const { t, addHistory, userName } = useStore();
   const [, setLocation] = useLocation();
   const [feeling, setFeeling] = useState<any>(null);
   const [comment, setComment] = useState("");
@@ -127,7 +138,9 @@ const FeedbackStep = () => {
   return (
     <div className="flex flex-col h-full gap-6">
        <div className="text-center space-y-2">
-         <h2 className="text-2xl font-heading font-bold text-foreground">{t.steps.step5.title}</h2>
+         <h2 className="text-2xl font-heading font-bold text-foreground">
+           {t.greatJob}{userName}!
+         </h2>
          <p className="text-muted-foreground">{t.howDoYouFeel}</p>
        </div>
 
@@ -146,7 +159,6 @@ const FeedbackStep = () => {
                data-testid={`button-feeling-${f.value}`}
              >
                <Icon className={`h-8 w-8 ${isSelected ? f.color : 'text-muted-foreground'}`} />
-               {/* <span className="text-[10px] font-medium text-muted-foreground">{f.label}</span> */}
              </button>
            )
          })}
@@ -191,6 +203,13 @@ export default function Routine() {
     }
   };
 
+  const handleHome = () => {
+    if (confirm(t.exitConfirmMessage)) {
+       exitRoutine();
+       setLocation("/");
+    }
+  }
+
   const stepKey = `step${currentStepIndex + 1}`;
   const isFeedback = currentStepIndex === 4;
 
@@ -203,12 +222,13 @@ export default function Routine() {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={handleExit} 
-          className="shrink-0 text-muted-foreground hover:text-destructive"
-          data-testid="button-exit"
+          onClick={handleHome} 
+          className="shrink-0 text-muted-foreground hover:text-primary"
+          data-testid="button-home"
         >
-          <X className="h-5 w-5" />
+          <Home className="h-5 w-5" />
         </Button>
+
         <div className="flex-1 space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground font-medium">
             <span>{t.step} {currentStepIndex + 1}</span>
