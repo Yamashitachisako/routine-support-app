@@ -24,11 +24,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 // Video IDs map
 const STEP_VIDEOS: Record<string, string> = {
-  step1: "5oETkTtvgow", // Hand washing
-  step2: "u5X5rJ8fW8g", // Eye exercises
-  step3: "dEsYUEG9yxA", // Relaxing water/music (Updated)
-  step4: "nqk3NW3sEFw", // Stretching
-  step5: "XgENmGTreU8", // Cool Down (New)
+  step3: "dEsYUEG9yxA", // Relaxing water/music
+  step5: "XgENmGTreU8", // Cool Down
 };
 
 // Component for Steps 1-4
@@ -58,17 +55,19 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
   return (
     <div className="flex flex-col h-full">
       {/* Embedded Video */}
-      <div className="w-full aspect-video bg-black rounded-2xl mb-6 overflow-hidden shadow-md relative">
-        <iframe 
-          width="100%" 
-          height="100%" 
-          src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-          title={stepData.title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowFullScreen
-          className="absolute inset-0"
-        ></iframe>
-      </div>
+      {videoId && (
+        <div className="w-full aspect-video bg-black rounded-2xl mb-6 overflow-hidden shadow-md relative">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+            title={stepData.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+            className="absolute inset-0"
+          ></iframe>
+        </div>
+      )}
       
       <div className="space-y-4 flex-1">
         <h2 className="text-2xl font-heading font-bold text-primary" data-testid={`text-step-title-${stepKey}`}>

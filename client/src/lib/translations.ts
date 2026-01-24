@@ -135,7 +135,7 @@ export const translations: Record<Language, Translation> = {
       },
       step2: {
         title: '目の体操',
-        description: '座って、動画の指示に従って目の体操を行いましょう。目の疲れを和らげ、視力を保護します。',
+        description: '座って、目の体操を行いましょう。目の疲れを和らげ、視力を保護します。',
       },
       step3: {
         title: '休憩・水分補給',
@@ -143,7 +143,7 @@ export const translations: Record<Language, Translation> = {
       },
       step4: {
         title: 'ストレッチ運動',
-        description: '動画の指示に従ってストレッチを行いましょう。筋肉をほぐし、柔軟性を高めます。',
+        description: 'ストレッチを行いましょう。筋肉をほぐし、柔軟性を高めます。',
       },
       step5: {
         title: 'クールダウン',
@@ -207,7 +207,7 @@ export const translations: Record<Language, Translation> = {
       },
       step2: {
         title: 'Sit down and do eye exercises',
-        description: 'Sit comfortably and follow the video instructions for eye exercises. This helps relieve eye strain and protect your vision.',
+        description: 'Sit comfortably and perform eye exercises. This helps relieve eye strain and protect your vision.',
       },
       step3: {
         title: 'Rest / drink water',
@@ -215,7 +215,7 @@ export const translations: Record<Language, Translation> = {
       },
       step4: {
         title: 'Do the stretching exercise',
-        description: 'Follow the video instructions to perform stretching exercises. This helps loosen muscles and improve flexibility.',
+        description: 'Perform stretching exercises. This helps loosen muscles and improve flexibility.',
       },
       step5: {
         title: 'Cool Down',
@@ -279,7 +279,7 @@ export const translations: Record<Language, Translation> = {
       },
       step2: {
         title: '坐下做眼保健操',
-        description: '舒适地坐下,按照视频指示进行眼保健操。这有助于缓解眼睛疲劳并保护视力。',
+        description: '舒适地坐下,进行眼保健操。这有助于缓解眼睛疲劳并保护视力。',
       },
       step3: {
         title: '休息/喝水',
@@ -287,7 +287,7 @@ export const translations: Record<Language, Translation> = {
       },
       step4: {
         title: '做拉伸运动',
-        description: '按照视频指示进行拉伸运动。这有助于放松肌肉并提高柔韧性。',
+        description: '进行拉伸运动。这有助于放松肌肉并提高柔韧性。',
       },
       step5: {
         title: '放松运动',
