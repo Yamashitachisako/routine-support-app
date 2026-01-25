@@ -95,13 +95,9 @@ const ActionStep = ({ stepKey, onNext, routineType }: { stepKey: string, onNext:
            <img 
              src={imagePath} 
              alt={stepData.title}
-             className="w-full h-full object-cover"
-             onError={(e) => {
-               e.currentTarget.style.display = 'none';
-             }}
+             className="w-full h-full object-cover absolute inset-0 z-10"
            />
-        ) : null}
-        {!videoId && (
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="text-8xl font-bold text-primary/20">
               {parseInt(stepKey.replace('step', ''))}
