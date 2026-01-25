@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Gift, Sparkles, Heart, Trophy } from "lucide-react";
+import { Star, Gift, Sparkles, Heart, Trophy, Home } from "lucide-react";
 
 const SYMBOLS = ['🌟', '🎉', '🌈', '🎁', '💎', '🍀'];
 const WINNING_MESSAGES_JA = [
@@ -37,6 +37,8 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
           title: 'ご褒美ゲーム',
           spinsLeft: '残り回数',
           greatJob: 'ルーティン完了！',
+          howToPlay: 'スピンボタンを押して、3つ同じ絵柄が揃ったら大当たり！',
+          backToHome: 'ホームに戻る',
         };
       case 'zh':
         return {
@@ -47,6 +49,8 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
           title: '奖励游戏',
           spinsLeft: '剩余次数',
           greatJob: '日常完成！',
+          howToPlay: '按下转动按钮，如果三个图案一样就中大奖！',
+          backToHome: '返回主页',
         };
       default:
         return {
@@ -57,6 +61,8 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
           title: 'Reward Game',
           spinsLeft: 'Spins left',
           greatJob: 'Routine Complete!',
+          howToPlay: 'Press Spin! Match 3 symbols to win!',
+          backToHome: 'Back to Home',
         };
     }
   };
@@ -159,7 +165,10 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
               <Trophy className="h-6 w-6 text-yellow-300" />
             </div>
 
-            <p className="text-white/80 mb-4 text-sm">{t.greatJob}</p>
+            <p className="text-white/80 mb-2 text-sm">{t.greatJob}</p>
+            <p className="text-yellow-200 mb-4 text-base font-medium bg-white/10 rounded-lg p-3">
+              💡 {t.howToPlay}
+            </p>
 
             {/* Slot Machine */}
             <div className="bg-white/20 rounded-2xl p-4 mb-4 backdrop-blur-sm">
@@ -204,11 +213,11 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
               <Button
                 onClick={spin}
                 disabled={isSpinning || spinsLeft <= 0}
-                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold h-14 text-lg rounded-xl"
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold h-14 text-lg rounded-xl"
                 data-testid="button-spin"
               >
                 <Sparkles className="mr-2 h-6 w-6" />
@@ -217,10 +226,11 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
               <Button
                 onClick={onClose}
                 variant="outline"
-                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/30 h-14 text-lg rounded-xl"
+                className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30 h-14 text-lg rounded-xl"
                 data-testid="button-close-game"
               >
-                {t.close}
+                <Home className="mr-2 h-5 w-5" />
+                {t.backToHome}
               </Button>
             </div>
           </CardContent>
