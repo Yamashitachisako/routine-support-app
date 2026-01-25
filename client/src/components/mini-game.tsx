@@ -121,7 +121,7 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.8, y: 20 }}
       >
-        <Card className="w-full max-w-sm bg-gradient-to-br from-purple-500 to-pink-500 border-none shadow-2xl">
+        <Card className="w-full max-w-md bg-gradient-to-br from-purple-500 to-pink-500 border-none shadow-2xl">
           <CardContent className="p-6 text-center text-white">
             {/* Confetti Effect */}
             {showConfetti && (
@@ -163,13 +163,13 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
 
             {/* Slot Machine */}
             <div className="bg-white/20 rounded-2xl p-4 mb-4 backdrop-blur-sm">
-              <div className="flex justify-center gap-2 mb-4">
+              <div className="flex justify-center gap-3 mb-4">
                 {slots.map((symbol, i) => (
                   <motion.div
                     key={i}
                     animate={isSpinning ? { y: [0, -10, 0] } : {}}
                     transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
-                    className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-4xl shadow-inner"
+                    className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-xl flex items-center justify-center text-5xl md:text-6xl shadow-inner"
                   >
                     {symbol}
                   </motion.div>
@@ -208,16 +208,16 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
               <Button
                 onClick={spin}
                 disabled={isSpinning || spinsLeft <= 0}
-                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold h-12 rounded-xl"
+                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold h-14 text-lg rounded-xl"
                 data-testid="button-spin"
               >
-                <Sparkles className="mr-2 h-5 w-5" />
+                <Sparkles className="mr-2 h-6 w-6" />
                 {t.spin}
               </Button>
               <Button
                 onClick={onClose}
                 variant="outline"
-                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/30 h-12 rounded-xl"
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/30 h-14 text-lg rounded-xl"
                 data-testid="button-close-game"
               >
                 {t.close}

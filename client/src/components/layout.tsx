@@ -20,26 +20,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2">
           {!isHome && !isRoutineActive && (
             <Link href="/">
-              <Button variant="ghost" size="icon" className="mr-2" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="mr-2 h-12 w-12" data-testid="button-back">
+                <ArrowLeft className="h-6 w-6" />
               </Button>
             </Link>
           )}
-          <h1 className="text-xl md:text-2xl font-heading font-semibold text-primary" data-testid="text-app-title">
+          <h1 className="text-2xl md:text-3xl font-heading font-semibold text-primary" data-testid="text-app-title">
             {t.appTitle}
           </h1>
         </div>
 
         {!isRoutineActive && (
           <Link href="/settings">
-            <Button variant="ghost" size="icon" data-testid="button-settings">
-              <Settings className="h-5 w-5 text-muted-foreground" />
+            <Button variant="ghost" size="icon" className="h-12 w-12" data-testid="button-settings">
+              <Settings className="h-6 w-6 text-muted-foreground" />
             </Button>
           </Link>
         )}
       </header>
 
-      <main className="pt-24 px-4 pb-8 max-w-md mx-auto min-h-screen flex flex-col relative z-10">
+      <main className="pt-24 px-4 pb-8 max-w-2xl mx-auto min-h-screen flex flex-col relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={location}

@@ -40,8 +40,8 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-6 flex-1 h-full">
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col justify-center items-center text-center gap-6 py-6">
-        <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden shadow-2xl border-4 border-white">
+      <section className="flex-1 flex flex-col justify-center items-center text-center gap-8 py-6">
+        <div className="relative w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl border-4 border-white">
            <img 
             src="/images/wellness-hero.png" 
             alt="Wellness" 
@@ -49,17 +49,17 @@ export default function Home() {
           /> 
         </div>
         
-        <div className="space-y-2 max-w-xs">
-          <h2 className="text-2xl font-heading font-medium text-foreground">
+        <div className="space-y-2 max-w-md">
+          <h2 className="text-3xl md:text-4xl font-heading font-medium text-foreground">
             {t.appTitle}
           </h2>
         </div>
 
-        <div className="w-full max-w-xs space-y-4">
+        <div className="w-full max-w-md space-y-6">
           {/* Routine Type Selector */}
-          <div className="space-y-2">
-            <Label className="pl-1 text-muted-foreground">{t.selectRoutineType}</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <Label className="pl-1 text-muted-foreground text-lg">{t.selectRoutineType}</Label>
+            <div className="grid grid-cols-2 gap-3">
               {routineTypes.map((type) => {
                 const Icon = type.icon;
                 const isSelected = routineType === type.value;
@@ -68,15 +68,15 @@ export default function Home() {
                     key={type.value}
                     onClick={() => setRoutineType(type.value)}
                     className={`
-                      flex items-center justify-center gap-2 p-3 rounded-xl transition-all font-medium
+                      flex items-center justify-center gap-3 p-4 md:p-5 rounded-xl transition-all font-medium text-lg
                       ${isSelected 
-                        ? 'bg-primary text-white shadow-md' 
+                        ? 'bg-primary text-white shadow-lg scale-105' 
                         : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'}
                     `}
                     data-testid={`button-routine-type-${type.value}`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm">{type.label}</span>
+                    <Icon className="h-6 w-6" />
+                    <span>{type.label}</span>
                   </button>
                 );
               })}
@@ -84,16 +84,16 @@ export default function Home() {
           </div>
 
           {/* Name Input */}
-          <div className="space-y-2 text-left">
-            <Label htmlFor="username" className="pl-1 text-muted-foreground">{t.enterName}</Label>
+          <div className="space-y-3 text-left">
+            <Label htmlFor="username" className="pl-1 text-muted-foreground text-lg">{t.enterName}</Label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <User className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
               <Input 
                 id="username"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder={t.namePlaceholder}
-                className="pl-9 h-12 rounded-xl bg-white/60 border-white focus:bg-white transition-all"
+                className="pl-12 h-14 text-lg rounded-xl bg-white/60 border-white focus:bg-white transition-all"
                 data-testid="input-username"
               />
             </div>
@@ -103,29 +103,29 @@ export default function Home() {
             onClick={handleStart} 
             disabled={!userName.trim()}
             size="lg" 
-            className="rounded-full w-full h-14 text-lg font-medium shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
+            className="rounded-full w-full h-16 text-xl font-medium shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
             data-testid="button-start-routine"
           >
-            <Play className="mr-2 h-5 w-5 fill-current" />
+            <Play className="mr-3 h-6 w-6 fill-current" />
             {t.startRoutine}
           </Button>
         </div>
       </section>
 
       {/* Progress Card */}
-      <Card className="glass-card border-none shadow-sm mt-auto">
-        <CardContent className="p-6 flex items-center justify-between">
+      <Card className="glass-card border-none shadow-sm">
+        <CardContent className="p-6 md:p-8 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">{t.todayProgress}</p>
+            <p className="text-base font-medium text-muted-foreground mb-1">{t.todayProgress}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-primary" data-testid="text-today-count">{todayCount}</span>
-              <span className="text-sm text-muted-foreground">{t.completedTimes}</span>
+              <span className="text-4xl font-bold text-primary" data-testid="text-today-count">{todayCount}</span>
+              <span className="text-base text-muted-foreground">{t.completedTimes}</span>
             </div>
           </div>
           
           <Link href="/history">
-            <Button variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/20 text-primary hover:bg-primary/5" data-testid="link-history">
-              <Calendar className="h-5 w-5" />
+            <Button variant="outline" size="icon" className="rounded-full h-14 w-14 border-primary/20 text-primary hover:bg-primary/5" data-testid="link-history">
+              <Calendar className="h-6 w-6" />
             </Button>
           </Link>
         </CardContent>
@@ -133,12 +133,12 @@ export default function Home() {
       
       {/* Quick Links */}
       <Link href="/history">
-         <div className="flex items-center justify-between p-4 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
-            <span className="font-medium text-foreground flex items-center gap-3">
-              <Calendar className="h-4 w-4 text-primary" />
+         <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
+            <span className="font-medium text-lg text-foreground flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-primary" />
               {t.history}
             </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
          </div>
       </Link>
     </div>
