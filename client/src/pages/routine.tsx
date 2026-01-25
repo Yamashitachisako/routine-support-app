@@ -148,17 +148,15 @@ const ActionStep = ({ stepKey, onNext, routineType }: { stepKey: string, onNext:
 };
 
 // Component for Feedback Step
-const FeedbackStep = () => {
-  const { t, userName, exitRoutine, routineType, language } = useStore();
-  const [, setLocation] = useLocation();
+const FeedbackStep = ({ onShowMiniGame }: { onShowMiniGame: () => void }) => {
+  const { t, userName, routineType } = useStore();
   const [feeling, setFeeling] = useState<any>(null);
   const [comment, setComment] = useState("");
-  const [showMiniGame, setShowMiniGame] = useState(false);
 
   const createRecordMutation = useMutation({
     mutationFn: createRoutineRecord,
     onSuccess: () => {
-      setShowMiniGame(true);
+      onShowMiniGame();
     },
   });
 
@@ -172,16 +170,6 @@ const FeedbackStep = () => {
       routineType,
     });
   };
-
-  const handleCloseMiniGame = () => {
-    setShowMiniGame(false);
-    exitRoutine();
-    setLocation("/");
-  };
-
-  if (showMiniGame) {
-    return <MiniGame onClose={handleCloseMiniGame} language={language} />;
-  }
 
   const feelings = [
     { value: 'veryBad', label: t.veryBad, icon: Frown, color: 'text-red-400' },
@@ -252,8 +240,9 @@ const FeedbackStep = () => {
 };
 
 export default function Routine() {
-  const { t, currentStepIndex, nextStep, exitRoutine, routineType } = useStore();
+  const { t, currentStepIndex, nextStep, exitRoutine, routineType, language } = useStore();
   const [, setLocation] = useLocation();
+  const [showMiniGame, setShowMiniGame] = useState(false);
 
   const handleHome = () => {
     if (confirm(t.exitConfirmMessage)) {
@@ -262,59 +251,76 @@ export default function Routine() {
     }
   }
 
+  const handleShowMiniGame = () => {
+    setShowMiniGame(true);
+  };
+
+  const handleCloseMiniGame = () => {
+    setShowMiniGame(false);
+    exitRoutine();
+    setLocation("/");
+  };
+
   const stepKey = `step${currentStepIndex + 1}`;
   const isFeedback = currentStepIndex === 5;
 
   const progress = ((currentStepIndex + 1) / 6) * 100;
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Top Bar with Progress */}
-      <div className="flex items-center gap-4 py-3">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleHome} 
-          className="shrink-0 text-muted-foreground hover:text-primary h-12 w-12"
-          data-testid="button-home"
-        >
-          <Home className="h-6 w-6" />
-        </Button>
+    <>
+      {/* Mini Game Modal - Rendered at page level for proper z-index */}
+      {showMiniGame && (
+        <MiniGame onClose={handleCloseMiniGame} language={language} />
+      )}
 
-        <div className="flex-1 space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground font-medium">
-            <span>{routineType === 'morning' ? t.morningRoutine : t.afternoonRoutine} - {t.step} {currentStepIndex + 1}</span>
-            <span>{t.of} 6</span>
+      <div className="flex flex-col h-full gap-4">
+        {/* Top Bar with Progress */}
+        <div className="flex items-center gap-4 py-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleHome} 
+            className="shrink-0 text-muted-foreground hover:text-primary h-12 w-12"
+            data-testid="button-home"
+          >
+            <Home className="h-6 w-6" />
+          </Button>
+
+          <div className="flex-1 space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground font-medium">
+              <span>{routineType === 'morning' ? t.morningRoutine : t.afternoonRoutine} - {t.step} {currentStepIndex + 1}</span>
+              <span>{t.of} 6</span>
+            </div>
+            <Progress value={progress} className="h-3" />
           </div>
-          <Progress value={progress} className="h-3" />
         </div>
-      </div>
 
-      {/* Main Content Card */}
-      <Card className="flex-1 glass-card border-white shadow-lg overflow-hidden flex flex-col">
-        <CardContent className="flex-1 p-6 flex flex-col">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${routineType}-${currentStepIndex}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col"
-            >
-              {isFeedback ? (
-                <FeedbackStep />
-              ) : (
-                <ActionStep 
-                  stepKey={stepKey} 
-                  onNext={nextStep}
-                  routineType={routineType}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </CardContent>
-      </Card>
-    </div>
+        {/* Main Content Card */}
+        <Card className="flex-1 glass-card border-white shadow-lg overflow-hidden flex flex-col">
+          <CardContent className="flex-1 p-6 flex flex-col">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${routineType}-${currentStepIndex}`}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col"
+              >
+                {isFeedback ? (
+                  <FeedbackStep onShowMiniGame={handleShowMiniGame} />
+                ) : (
+                  <ActionStep 
+                    stepKey={stepKey} 
+                    onNext={nextStep}
+                    routineType={routineType}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
