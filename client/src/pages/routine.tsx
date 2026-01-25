@@ -6,48 +6,61 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { 
-  Check, 
   ChevronRight, 
-  Pause, 
-  Play, 
-  X, 
   Clock,
   Smile,
   Meh,
   Frown,
-  ThumbsUp,
   Star,
-  Home
+  Home,
+  DoorOpen
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createRoutineRecord } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 
-// Video IDs map
-const STEP_VIDEOS: Record<string, string> = {
-  step3: "dEsYUEG9yxA", // Relaxing water/music
-  step5: "XgENmGTreU8", // Cool Down
+// Video IDs map - only for afternoon routine
+const AFTERNOON_STEP_VIDEOS: Record<string, string> = {
+  step3: "dEsYUEG9yxA",
+  step5: "XgENmGTreU8",
 };
 
-// Image paths for steps
-const STEP_IMAGES: Record<string, string> = {
+// Image paths for afternoon routine
+const AFTERNOON_STEP_IMAGES: Record<string, string> = {
   step1: "/images/step1-wash.png",
   step2: "/images/step2-eye.png",
   step3: "/images/step3-water.png",
   step4: "/images/step4-stretch.png",
 };
 
-// Component for Steps 1-4
-const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }) => {
+// Image paths for morning routine
+const MORNING_STEP_IMAGES: Record<string, string> = {
+  step1: "/images/morning-wakeup.png",
+  step2: "/images/morning-wash.png",
+  step3: "/images/morning-breakfast.png",
+  step4: "/images/morning-dress.png",
+  step5: "/images/morning-bag.png",
+};
+
+// Component for Action Steps
+const ActionStep = ({ stepKey, onNext, routineType }: { stepKey: string, onNext: () => void, routineType: 'morning' | 'afternoon' }) => {
   const { t } = useStore();
+  
+  const steps = routineType === 'morning' ? t.morningSteps : t.afternoonSteps;
   // @ts-ignore - dynamic key access
-  const stepData = t.steps[stepKey];
-  const videoId = STEP_VIDEOS[stepKey];
-  const imagePath = STEP_IMAGES[stepKey];
+  const stepData = steps[stepKey];
+  
+  const videoId = routineType === 'afternoon' ? AFTERNOON_STEP_VIDEOS[stepKey] : undefined;
+  const imagePath = routineType === 'morning' ? MORNING_STEP_IMAGES[stepKey] : AFTERNOON_STEP_IMAGES[stepKey];
   
   const [timeLeft, setTimeLeft] = useState(20);
   const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    setTimeLeft(20);
+    setIsActive(false);
+  }, [stepKey]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -82,10 +95,16 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
              src={imagePath} 
              alt={stepData.title}
              className="w-full h-full object-cover"
+             onError={(e) => {
+               e.currentTarget.style.display = 'none';
+             }}
            />
-        ) : (
-          <div className="bg-secondary/30 w-full h-full flex items-center justify-center">
-             <span className="text-muted-foreground opacity-50">No Visual</span>
+        ) : null}
+        {!videoId && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <div className="text-6xl font-bold text-primary/20">
+              {parseInt(stepKey.replace('step', ''))}
+            </div>
           </div>
         )}
       </div>
@@ -131,7 +150,7 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
   );
 };
 
-// Component for Step 5 (Feedback)
+// Component for Feedback Step
 const FeedbackStep = () => {
   const { t, userName, exitRoutine, routineType } = useStore();
   const [, setLocation] = useLocation();
@@ -164,6 +183,8 @@ const FeedbackStep = () => {
     { value: 'good', label: t.good, icon: Smile, color: 'text-green-400' },
     { value: 'veryGood', label: t.veryGood, icon: Star, color: 'text-primary' },
   ];
+
+  const finishLabel = routineType === 'morning' ? t.leaveHome : t.complete;
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -216,7 +237,8 @@ const FeedbackStep = () => {
          className="w-full h-12 mt-auto rounded-xl"
          data-testid="button-complete"
        >
-         {createRecordMutation.isPending ? t.loading : t.complete}
+         {routineType === 'morning' && <DoorOpen className="mr-2 h-5 w-5" />}
+         {createRecordMutation.isPending ? t.loading : finishLabel}
        </Button>
     </div>
   );
@@ -225,13 +247,6 @@ const FeedbackStep = () => {
 export default function Routine() {
   const { t, currentStepIndex, nextStep, exitRoutine, routineType } = useStore();
   const [, setLocation] = useLocation();
-
-  const handleExit = () => {
-    if (confirm(t.exitConfirmMessage)) {
-      exitRoutine();
-      setLocation("/");
-    }
-  };
 
   const handleHome = () => {
     if (confirm(t.exitConfirmMessage)) {
@@ -273,7 +288,7 @@ export default function Routine() {
         <CardContent className="flex-1 p-6 flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentStepIndex}
+              key={`${routineType}-${currentStepIndex}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -285,7 +300,8 @@ export default function Routine() {
               ) : (
                 <ActionStep 
                   stepKey={stepKey} 
-                  onNext={nextStep} 
+                  onNext={nextStep}
+                  routineType={routineType}
                 />
               )}
             </motion.div>

@@ -1,5 +1,10 @@
 export type Language = 'ja' | 'en' | 'zh';
 
+interface StepContent {
+  title: string;
+  description: string;
+}
+
 export interface Translation {
   // Home Screen
   appTitle: string;
@@ -15,6 +20,7 @@ export interface Translation {
   morningRoutine: string;
   afternoonRoutine: string;
   selectRoutineType: string;
+  leaveHome: string;
   
   // Routine Steps
   step: string;
@@ -59,34 +65,28 @@ export interface Translation {
   loading: string;
   noHistory: string;
   
-  // Routine Steps Content
-  steps: {
-    step1: {
-      title: string;
-      description: string;
-    };
-    step2: {
-      title: string;
-      description: string;
-    };
-    step3: {
-      title: string;
-      description: string;
-    };
-    step4: {
-      title: string;
-      description: string;
-    };
-    step5: {
-      title: string;
-      description: string;
-    };
+  // Morning Routine Steps
+  morningSteps: {
+    step1: StepContent;
+    step2: StepContent;
+    step3: StepContent;
+    step4: StepContent;
+    step5: StepContent;
+  };
+  
+  // Afternoon Routine Steps
+  afternoonSteps: {
+    step1: StepContent;
+    step2: StepContent;
+    step3: StepContent;
+    step4: StepContent;
+    step5: StepContent;
   };
 }
 
 export const translations: Record<Language, Translation> = {
   ja: {
-    appTitle: 'ヘルスルーティン',
+    appTitle: 'ルーティンサポート',
     startRoutine: 'ルーティンを開始',
     todayProgress: '今日の進捗',
     completedTimes: '回完了',
@@ -98,6 +98,7 @@ export const translations: Record<Language, Translation> = {
     morningRoutine: '朝のルーティン',
     afternoonRoutine: '午後のルーティン',
     selectRoutineType: 'ルーティンを選択',
+    leaveHome: '家を出る',
     
     step: 'ステップ',
     of: '/',
@@ -115,7 +116,7 @@ export const translations: Record<Language, Translation> = {
     secondsShort: '秒',
     timeRemaining: '残り時間',
     
-    howDoYouFeel: 'エクササイズ後の気分は?',
+    howDoYouFeel: '今の気分は?',
     veryBad: 'とても悪い',
     bad: '悪い',
     neutral: '普通',
@@ -137,7 +138,30 @@ export const translations: Record<Language, Translation> = {
     loading: '読み込み中...',
     noHistory: 'まだ記録がありません',
     
-    steps: {
+    morningSteps: {
+      step1: {
+        title: '起きる',
+        description: '目を覚まして、ベッドから起き上がりましょう。新しい一日の始まりです！',
+      },
+      step2: {
+        title: '顔を洗う・歯磨きをする',
+        description: '洗面所で顔を洗って、歯を磨きましょう。気持ちよくスッキリ！',
+      },
+      step3: {
+        title: '朝ごはんを食べる',
+        description: '栄養のある朝食を食べて、元気をチャージしましょう。',
+      },
+      step4: {
+        title: '服を着替える',
+        description: '今日の服に着替えて、準備を整えましょう。',
+      },
+      step5: {
+        title: 'カバン・荷物の準備',
+        description: '必要なものをカバンに入れて、忘れ物がないか確認しましょう。',
+      },
+    },
+    
+    afternoonSteps: {
       step1: {
         title: '入室時の手洗い',
         description: '石鹸を使って、手のひら、手の甲、指の間、爪の下をしっかり洗いましょう。少なくとも20秒間洗い流してください。',
@@ -162,7 +186,7 @@ export const translations: Record<Language, Translation> = {
   },
   
   en: {
-    appTitle: 'Health Routine',
+    appTitle: 'Routine Support',
     startRoutine: 'Start Routine',
     todayProgress: "Today's Progress",
     completedTimes: 'times completed',
@@ -174,6 +198,7 @@ export const translations: Record<Language, Translation> = {
     morningRoutine: 'Morning Routine',
     afternoonRoutine: 'Afternoon Routine',
     selectRoutineType: 'Select Routine',
+    leaveHome: 'Leave Home',
     
     step: 'Step',
     of: 'of',
@@ -191,7 +216,7 @@ export const translations: Record<Language, Translation> = {
     secondsShort: 'sec',
     timeRemaining: 'Time Remaining',
     
-    howDoYouFeel: 'How do you feel after the exercises?',
+    howDoYouFeel: 'How do you feel?',
     veryBad: 'Very Bad',
     bad: 'Bad',
     neutral: 'Neutral',
@@ -213,21 +238,44 @@ export const translations: Record<Language, Translation> = {
     loading: 'Loading...',
     noHistory: 'No records yet',
     
-    steps: {
+    morningSteps: {
       step1: {
-        title: 'Wash hands upon arrival',
+        title: 'Wake Up',
+        description: 'Open your eyes and get out of bed. A new day begins!',
+      },
+      step2: {
+        title: 'Wash Face & Brush Teeth',
+        description: 'Go to the bathroom, wash your face, and brush your teeth. Feel refreshed!',
+      },
+      step3: {
+        title: 'Eat Breakfast',
+        description: 'Have a nutritious breakfast to charge up your energy.',
+      },
+      step4: {
+        title: 'Get Dressed',
+        description: 'Change into your clothes for today and get ready.',
+      },
+      step5: {
+        title: 'Prepare Your Bag',
+        description: 'Put everything you need in your bag and check for forgotten items.',
+      },
+    },
+    
+    afternoonSteps: {
+      step1: {
+        title: 'Wash Hands',
         description: 'Use soap to thoroughly wash your palms, backs of hands, between fingers, and under nails. Rinse for at least 20 seconds.',
       },
       step2: {
-        title: 'Sit down and do eye exercises',
+        title: 'Eye Exercises',
         description: 'Sit comfortably and perform eye exercises. This helps relieve eye strain and protect your vision.',
       },
       step3: {
-        title: 'Rest / drink water',
+        title: 'Rest & Hydrate',
         description: 'Relax and take deep breaths. Drink a glass of water to stay hydrated.',
       },
       step4: {
-        title: 'Do the stretching exercise',
+        title: 'Stretching',
         description: 'Perform stretching exercises. This helps loosen muscles and improve flexibility.',
       },
       step5: {
@@ -238,7 +286,7 @@ export const translations: Record<Language, Translation> = {
   },
   
   zh: {
-    appTitle: '健康日常',
+    appTitle: '日常支持',
     startRoutine: '开始日常',
     todayProgress: '今日进度',
     completedTimes: '次完成',
@@ -250,6 +298,7 @@ export const translations: Record<Language, Translation> = {
     morningRoutine: '早晨日常',
     afternoonRoutine: '下午日常',
     selectRoutineType: '选择日常',
+    leaveHome: '出门',
     
     step: '步骤',
     of: '/',
@@ -267,7 +316,7 @@ export const translations: Record<Language, Translation> = {
     secondsShort: '秒',
     timeRemaining: '剩余时间',
     
-    howDoYouFeel: '运动后感觉如何?',
+    howDoYouFeel: '感觉如何?',
     veryBad: '非常糟糕',
     bad: '糟糕',
     neutral: '一般',
@@ -289,21 +338,44 @@ export const translations: Record<Language, Translation> = {
     loading: '加载中...',
     noHistory: '还没有记录',
     
-    steps: {
+    morningSteps: {
       step1: {
-        title: '进门洗手',
+        title: '起床',
+        description: '睁开眼睛，从床上起来。新的一天开始了！',
+      },
+      step2: {
+        title: '洗脸刷牙',
+        description: '去洗手间洗脸刷牙，让自己清爽起来！',
+      },
+      step3: {
+        title: '吃早餐',
+        description: '吃一顿营养丰富的早餐，为身体充电。',
+      },
+      step4: {
+        title: '换衣服',
+        description: '换上今天的衣服，做好准备。',
+      },
+      step5: {
+        title: '准备书包',
+        description: '把需要的东西放进书包，检查有没有遗漏。',
+      },
+    },
+    
+    afternoonSteps: {
+      step1: {
+        title: '洗手',
         description: '用肥皂彻底清洗手掌、手背、手指间和指甲下。至少冲洗20秒。',
       },
       step2: {
-        title: '坐下做眼保健操',
+        title: '眼保健操',
         description: '舒适地坐下,进行眼保健操。这有助于缓解眼睛疲劳并保护视力。',
       },
       step3: {
-        title: '休息/喝水',
+        title: '休息喝水',
         description: '放松并深呼吸。喝一杯水以保持身体水分。',
       },
       step4: {
-        title: '做拉伸运动',
+        title: '拉伸运动',
         description: '进行拉伸运动。这有助于放松肌肉并提高柔韧性。',
       },
       step5: {
