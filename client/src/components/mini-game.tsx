@@ -165,10 +165,21 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
               <Trophy className="h-6 w-6 text-yellow-300" />
             </div>
 
-            <p className="text-white/80 mb-2 text-sm">{t.greatJob}</p>
-            <p className="text-yellow-200 mb-4 text-base font-medium bg-white/10 rounded-lg p-3">
-              💡 {t.howToPlay}
-            </p>
+            <p className="text-white/90 mb-3 text-lg font-medium">{t.greatJob}</p>
+            
+            {/* Big visual instructions */}
+            <div className="text-yellow-200 mb-5 text-xl font-bold bg-white/20 rounded-xl p-4 border-2 border-yellow-300/50">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <span className="text-3xl">👆</span>
+                <span>↓</span>
+              </div>
+              <p className="mb-2">💡 {t.howToPlay}</p>
+              <div className="flex justify-center gap-2 text-2xl">
+                <span>🌟</span><span>🌟</span><span>🌟</span>
+                <span className="text-white">=</span>
+                <span>🎉</span>
+              </div>
+            </div>
 
             {/* Slot Machine */}
             <div className="bg-white/20 rounded-2xl p-4 mb-4 backdrop-blur-sm">
