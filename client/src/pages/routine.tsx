@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createRoutineRecord } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
+import MiniGame from "@/components/mini-game";
 
 // Video IDs map - only for afternoon routine
 const AFTERNOON_STEP_VIDEOS: Record<string, string> = {
@@ -152,16 +153,16 @@ const ActionStep = ({ stepKey, onNext, routineType }: { stepKey: string, onNext:
 
 // Component for Feedback Step
 const FeedbackStep = () => {
-  const { t, userName, exitRoutine, routineType } = useStore();
+  const { t, userName, exitRoutine, routineType, language } = useStore();
   const [, setLocation] = useLocation();
   const [feeling, setFeeling] = useState<any>(null);
   const [comment, setComment] = useState("");
+  const [showMiniGame, setShowMiniGame] = useState(false);
 
   const createRecordMutation = useMutation({
     mutationFn: createRoutineRecord,
     onSuccess: () => {
-      exitRoutine();
-      setLocation("/");
+      setShowMiniGame(true);
     },
   });
 
@@ -175,6 +176,16 @@ const FeedbackStep = () => {
       routineType,
     });
   };
+
+  const handleCloseMiniGame = () => {
+    setShowMiniGame(false);
+    exitRoutine();
+    setLocation("/");
+  };
+
+  if (showMiniGame) {
+    return <MiniGame onClose={handleCloseMiniGame} language={language} />;
+  }
 
   const feelings = [
     { value: 'veryBad', label: t.veryBad, icon: Frown, color: 'text-red-400' },
