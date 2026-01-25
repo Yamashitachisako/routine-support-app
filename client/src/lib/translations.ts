@@ -11,6 +11,11 @@ export interface Translation {
   nameLabel: string;
   namePlaceholder: string;
   
+  // Routine Type
+  morningRoutine: string;
+  afternoonRoutine: string;
+  selectRoutineType: string;
+  
   // Routine Steps
   step: string;
   of: string;
@@ -90,6 +95,10 @@ export const translations: Record<Language, Translation> = {
     nameLabel: 'お名前',
     namePlaceholder: 'お名前',
     
+    morningRoutine: '朝のルーティン',
+    afternoonRoutine: '午後のルーティン',
+    selectRoutineType: 'ルーティンを選択',
+    
     step: 'ステップ',
     of: '/',
     next: '次へ',
@@ -162,6 +171,10 @@ export const translations: Record<Language, Translation> = {
     nameLabel: 'Name',
     namePlaceholder: 'Your Name',
     
+    morningRoutine: 'Morning Routine',
+    afternoonRoutine: 'Afternoon Routine',
+    selectRoutineType: 'Select Routine',
+    
     step: 'Step',
     of: 'of',
     next: 'Next',
@@ -233,6 +246,10 @@ export const translations: Record<Language, Translation> = {
     enterName: '请输入您的名字',
     nameLabel: '名字',
     namePlaceholder: '您的名字',
+    
+    morningRoutine: '早晨日常',
+    afternoonRoutine: '下午日常',
+    selectRoutineType: '选择日常',
     
     step: '步骤',
     of: '/',

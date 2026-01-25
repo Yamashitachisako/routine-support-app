@@ -1,16 +1,16 @@
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { Play, Calendar, ChevronRight, User } from "lucide-react";
+import { Play, Calendar, ChevronRight, User, Sun, Moon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { getRoutineRecords } from "@/lib/api";
+import type { RoutineType } from "@/lib/store";
 
 export default function Home() {
-  const { t, startRoutine, userName, setUserName } = useStore();
+  const { t, startRoutine, userName, setUserName, routineType, setRoutineType } = useStore();
   const [, setLocation] = useLocation();
 
   const { data: history = [] } = useQuery({
@@ -32,11 +32,16 @@ export default function Home() {
            d.getFullYear() === today.getFullYear();
   }).length;
 
+  const routineTypes: { value: RoutineType; label: string; icon: typeof Sun }[] = [
+    { value: 'morning', label: t.morningRoutine, icon: Sun },
+    { value: 'afternoon', label: t.afternoonRoutine, icon: Moon },
+  ];
+
   return (
     <div className="flex flex-col gap-6 flex-1 h-full">
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col justify-center items-center text-center gap-8 py-8">
-        <div className="relative w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl border-4 border-white">
+      <section className="flex-1 flex flex-col justify-center items-center text-center gap-6 py-6">
+        <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden shadow-2xl border-4 border-white">
            <img 
             src="/images/wellness-hero.png" 
             alt="Wellness" 
@@ -45,15 +50,40 @@ export default function Home() {
         </div>
         
         <div className="space-y-2 max-w-xs">
-          <h2 className="text-3xl font-heading font-medium text-foreground">
+          <h2 className="text-2xl font-heading font-medium text-foreground">
             {t.appTitle}
           </h2>
-          <p className="text-muted-foreground text-sm">
-            {t.steps.step1.description.substring(0, 50)}...
-          </p>
         </div>
 
         <div className="w-full max-w-xs space-y-4">
+          {/* Routine Type Selector */}
+          <div className="space-y-2">
+            <Label className="pl-1 text-muted-foreground">{t.selectRoutineType}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {routineTypes.map((type) => {
+                const Icon = type.icon;
+                const isSelected = routineType === type.value;
+                return (
+                  <button
+                    key={type.value}
+                    onClick={() => setRoutineType(type.value)}
+                    className={`
+                      flex items-center justify-center gap-2 p-3 rounded-xl transition-all font-medium
+                      ${isSelected 
+                        ? 'bg-primary text-white shadow-md' 
+                        : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'}
+                    `}
+                    data-testid={`button-routine-type-${type.value}`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="text-sm">{type.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Name Input */}
           <div className="space-y-2 text-left">
             <Label htmlFor="username" className="pl-1 text-muted-foreground">{t.enterName}</Label>
             <div className="relative">

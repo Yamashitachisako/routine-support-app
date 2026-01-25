@@ -1,7 +1,7 @@
 import { useStore } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Smile, Meh, Frown, Star } from "lucide-react";
+import { Smile, Meh, Frown, Star, Sun, Moon } from "lucide-react";
 import { format } from "date-fns";
 import { ja, enUS, zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,13 @@ const MoodIcon = ({ feeling }: { feeling: string }) => {
   }
 };
 
+const RoutineTypeIcon = ({ type }: { type: string }) => {
+  if (type === 'afternoon') {
+    return <Moon className="h-4 w-4 text-indigo-400" />;
+  }
+  return <Sun className="h-4 w-4 text-amber-400" />;
+};
+
 export default function History() {
   const { t, language } = useStore();
 
@@ -32,6 +39,13 @@ export default function History() {
       case 'zh': return zhCN;
       default: return enUS;
     }
+  };
+
+  const getRoutineTypeLabel = (type: string) => {
+    if (type === 'afternoon') {
+      return t.afternoonRoutine;
+    }
+    return t.morningRoutine;
   };
 
   if (isLoading) {
@@ -63,6 +77,12 @@ export default function History() {
                     <div className="flex justify-between items-baseline mb-1">
                       <div>
                         <h4 className="font-medium text-foreground">{record.userName}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <RoutineTypeIcon type={record.routineType || 'morning'} />
+                          <span className="text-xs text-muted-foreground">
+                            {getRoutineTypeLabel(record.routineType || 'morning')}
+                          </span>
+                        </div>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(record.date), 'PPP p', { locale: getDateLocale() })}
                         </span>

@@ -7,8 +7,9 @@ export const routineRecords = pgTable("routine_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userName: text("user_name").notNull(),
   date: timestamp("date").notNull().defaultNow(),
-  feeling: text("feeling").notNull(), // 'veryBad' | 'bad' | 'neutral' | 'good' | 'veryGood'
+  feeling: text("feeling").notNull(),
   comment: text("comment"),
+  routineType: text("routine_type").notNull().default('morning'),
 });
 
 export const insertRoutineRecordSchema = createInsertSchema(routineRecords).omit({

@@ -133,7 +133,7 @@ const ActionStep = ({ stepKey, onNext }: { stepKey: string, onNext: () => void }
 
 // Component for Step 5 (Feedback)
 const FeedbackStep = () => {
-  const { t, userName, exitRoutine } = useStore();
+  const { t, userName, exitRoutine, routineType } = useStore();
   const [, setLocation] = useLocation();
   const [feeling, setFeeling] = useState<any>(null);
   const [comment, setComment] = useState("");
@@ -153,6 +153,7 @@ const FeedbackStep = () => {
       userName,
       feeling: submittedFeeling,
       comment: comment || undefined,
+      routineType,
     });
   };
 
@@ -222,7 +223,7 @@ const FeedbackStep = () => {
 };
 
 export default function Routine() {
-  const { t, currentStepIndex, nextStep, exitRoutine } = useStore();
+  const { t, currentStepIndex, nextStep, exitRoutine, routineType } = useStore();
   const [, setLocation] = useLocation();
 
   const handleExit = () => {
@@ -260,7 +261,7 @@ export default function Routine() {
 
         <div className="flex-1 space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground font-medium">
-            <span>{t.step} {currentStepIndex + 1}</span>
+            <span>{routineType === 'morning' ? t.morningRoutine : t.afternoonRoutine} - {t.step} {currentStepIndex + 1}</span>
             <span>{t.of} 6</span>
           </div>
           <Progress value={progress} className="h-2" />

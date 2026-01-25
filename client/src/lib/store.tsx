@@ -9,10 +9,13 @@ export interface HistoryRecord {
   comment?: string;
 }
 
+export type RoutineType = 'morning' | 'afternoon';
+
 interface AppState {
   language: Language;
   history: HistoryRecord[];
   userName: string;
+  routineType: RoutineType;
   
   // Routine State
   isRoutineActive: boolean;
@@ -22,6 +25,7 @@ interface AppState {
   // Actions
   setLanguage: (lang: Language) => void;
   setUserName: (name: string) => void;
+  setRoutineType: (type: RoutineType) => void;
   startRoutine: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -35,12 +39,14 @@ const useBaseStore = create<AppState>()(
       language: 'ja', 
       history: [],
       userName: '',
+      routineType: 'morning',
       isRoutineActive: false,
       currentStepIndex: 0,
       startTime: null,
 
       setLanguage: (lang) => set({ language: lang }),
       setUserName: (name) => set({ userName: name }),
+      setRoutineType: (type) => set({ routineType: type }),
       
       startRoutine: () => set({ 
         isRoutineActive: true, 
@@ -77,7 +83,8 @@ const useBaseStore = create<AppState>()(
       partialize: (state) => ({ 
         language: state.language, 
         history: state.history,
-        userName: state.userName 
+        userName: state.userName,
+        routineType: state.routineType
       }),
     }
   )
