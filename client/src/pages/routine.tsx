@@ -46,8 +46,8 @@ function getIntroData(introKey: string, t: any) {
 
 function getRoutineLabel(routineType: string, t: any) {
   if (routineType === 'morning') return t.wipeDownRoutine;
-  if (routineType === 'eyeExercise') return t.eyeExercise;
-  return t.stretchingExercise;
+  if (routineType === 'eyeExercise') return t.morningRoutine;
+  return t.afternoonRoutine;
 }
 
 const IntroStep = ({ introKey, onNext, onBack, showBack }: { 
@@ -131,14 +131,17 @@ const ActionStep = ({ stepKey, onNext, onBack, routineType, showBack }: {
   if (!stepData) return null;
 
   const imagePath = `/images/${routineType}-${stepKey}.png`;
+  const isWipeDown = routineType === 'morning';
 
   return (
     <div className="flex flex-col h-full">
-      <div className="w-full aspect-video bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center">
+      <div className={`w-full bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center ${
+        isWipeDown ? 'aspect-[4/3] max-w-[280px] mx-auto' : 'aspect-square max-w-[400px] mx-auto'
+      }`}>
         <img 
           src={imagePath} 
           alt={stepData.title}
-          className="w-full h-full object-cover absolute inset-0 z-10"
+          className="w-full h-full object-contain absolute inset-0 z-10 p-2"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
           }}
@@ -154,7 +157,7 @@ const ActionStep = ({ stepKey, onNext, onBack, routineType, showBack }: {
         <h2 className="text-2xl md:text-3xl font-heading font-bold text-primary" data-testid={`text-step-title-${stepKey}`}>
           {stepData.title}
         </h2>
-        <p className="text-lg text-muted-foreground leading-relaxed" data-testid={`text-step-desc-${stepKey}`}>
+        <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line" data-testid={`text-step-desc-${stepKey}`}>
           {stepData.description}
         </p>
       </div>
