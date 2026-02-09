@@ -1,19 +1,17 @@
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { Play, Calendar, ChevronRight, User, Sun, Eye, Activity } from "lucide-react";
+import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { getRoutineRecords } from "@/lib/api";
 import type { RoutineType } from "@/lib/store";
-import { useState } from "react";
 
 export default function Home() {
   const { t, startRoutine, userName, setUserName, routineType, setRoutineType } = useStore();
   const [, setLocation] = useLocation();
-  const [mainTab, setMainTab] = useState<'morning' | 'afternoon'>('morning');
 
   const { data: history = [] } = useQuery({
     queryKey: ['routine-records'],
@@ -34,18 +32,11 @@ export default function Home() {
            d.getFullYear() === today.getFullYear();
   }).length;
 
-  const handleMainTabChange = (tab: 'morning' | 'afternoon') => {
-    setMainTab(tab);
-    if (tab === 'morning') {
-      setRoutineType('morning');
-    } else {
-      setRoutineType('eyeExercise');
-    }
-  };
-
-  const handleAfternoonSubTab = (type: RoutineType) => {
-    setRoutineType(type);
-  };
+  const routineButtons: { type: RoutineType; label: string; icon: React.ReactNode }[] = [
+    { type: 'morning', label: t.wipeDownRoutine, icon: <Sparkles className="h-6 w-6" /> },
+    { type: 'eyeExercise', label: t.morningRoutine, icon: <Eye className="h-6 w-6" /> },
+    { type: 'stretching', label: t.afternoonRoutine, icon: <Activity className="h-6 w-6" /> },
+  ];
 
   return (
     <div className="flex flex-col gap-6 flex-1 h-full">
@@ -65,68 +56,27 @@ export default function Home() {
         </div>
 
         <div className="w-full max-w-md space-y-6">
-          {/* Main Tab: Morning / Afternoon */}
           <div className="space-y-3">
             <Label className="pl-1 text-muted-foreground text-lg">{t.selectRoutineType}</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleMainTabChange('morning')}
-                className={`flex items-center justify-center gap-3 p-4 md:p-5 rounded-xl transition-all font-medium text-lg ${
-                  mainTab === 'morning'
-                    ? 'bg-primary text-white shadow-lg scale-105'
-                    : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
-                }`}
-                data-testid="button-routine-type-morning"
-              >
-                <Sun className="h-6 w-6" />
-                <span>{t.wipeDownRoutine}</span>
-              </button>
-              <button
-                onClick={() => handleMainTabChange('afternoon')}
-                className={`flex items-center justify-center gap-3 p-4 md:p-5 rounded-xl transition-all font-medium text-lg ${
-                  mainTab === 'afternoon'
-                    ? 'bg-primary text-white shadow-lg scale-105'
-                    : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
-                }`}
-                data-testid="button-routine-type-afternoon"
-              >
-                <Activity className="h-6 w-6" />
-                <span>{t.afternoonRoutine}</span>
-              </button>
+            <div className="grid grid-cols-3 gap-3">
+              {routineButtons.map(({ type, label, icon }) => (
+                <button
+                  key={type}
+                  onClick={() => setRoutineType(type)}
+                  className={`flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-xl transition-all font-medium text-base ${
+                    routineType === type
+                      ? 'bg-primary text-white shadow-lg scale-105'
+                      : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
+                  }`}
+                  data-testid={`button-routine-type-${type}`}
+                >
+                  {icon}
+                  <span className="text-sm leading-tight">{label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Afternoon Sub-tabs */}
-          {mainTab === 'afternoon' && (
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleAfternoonSubTab('eyeExercise')}
-                className={`flex items-center justify-center gap-2 p-3 md:p-4 rounded-xl transition-all font-medium text-base ${
-                  routineType === 'eyeExercise'
-                    ? 'bg-accent text-white shadow-md'
-                    : 'bg-white/40 text-foreground hover:bg-white/60 border border-white/40'
-                }`}
-                data-testid="button-routine-sub-eye"
-              >
-                <Eye className="h-5 w-5" />
-                <span>{t.eyeExercise}</span>
-              </button>
-              <button
-                onClick={() => handleAfternoonSubTab('stretching')}
-                className={`flex items-center justify-center gap-2 p-3 md:p-4 rounded-xl transition-all font-medium text-base ${
-                  routineType === 'stretching'
-                    ? 'bg-accent text-white shadow-md'
-                    : 'bg-white/40 text-foreground hover:bg-white/60 border border-white/40'
-                }`}
-                data-testid="button-routine-sub-stretching"
-              >
-                <Activity className="h-5 w-5" />
-                <span>{t.stretchingExercise}</span>
-              </button>
-            </div>
-          )}
-
-          {/* Name Input */}
           <div className="space-y-3 text-left">
             <Label htmlFor="username" className="pl-1 text-muted-foreground text-lg">{t.enterName}</Label>
             <div className="relative">
