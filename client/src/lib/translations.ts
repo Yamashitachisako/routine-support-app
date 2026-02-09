@@ -62,9 +62,11 @@ export interface Translation {
   loading: string;
   noHistory: string;
   
+  morningIntroSteps: Record<string, StepContent>;
   morningSteps: Record<string, StepContent>;
   eyeExerciseSteps: Record<string, StepContent>;
   stretchingSteps: Record<string, StepContent>;
+  preparation: string;
 }
 
 export const translations: Record<Language, Translation> = {
@@ -124,6 +126,14 @@ export const translations: Record<Language, Translation> = {
     history: '履歴',
     loading: '読み込み中...',
     noHistory: 'まだ記録がありません',
+    preparation: '準備',
+    
+    morningIntroSteps: {
+      intro1: { title: '白い布', description: '白い布を用意してください' },
+      intro2: { title: '緑の布', description: '緑の布を用意してください' },
+      intro3: { title: 'ピンクのバケツ', description: 'ピンクのバケツを用意してください' },
+      intro4: { title: 'デトールスプレー', description: 'デトールスプレーを用意してください' },
+    },
     
     morningSteps: {
       step1: { title: '白い布を取る', description: 'Step 1: Take white cloth' },
@@ -225,6 +235,14 @@ export const translations: Record<Language, Translation> = {
     history: 'History',
     loading: 'Loading...',
     noHistory: 'No records yet',
+    preparation: 'Preparation',
+    
+    morningIntroSteps: {
+      intro1: { title: 'White Cloth', description: 'Prepare the white cloth' },
+      intro2: { title: 'Green Cloth', description: 'Prepare the green cloth' },
+      intro3: { title: 'Pink Pail', description: 'Prepare the pink pail' },
+      intro4: { title: 'Dettol Spray', description: 'Prepare the Dettol spray' },
+    },
     
     morningSteps: {
       step1: { title: 'Take white cloth', description: 'Step 1: Take white cloth' },
@@ -326,6 +344,14 @@ export const translations: Record<Language, Translation> = {
     history: '历史记录',
     loading: '加载中...',
     noHistory: '还没有记录',
+    preparation: '准备',
+    
+    morningIntroSteps: {
+      intro1: { title: '白布', description: '请准备白布' },
+      intro2: { title: '绿布', description: '请准备绿布' },
+      intro3: { title: '粉色水桶', description: '请准备粉色水桶' },
+      intro4: { title: '滴露喷雾', description: '请准备滴露喷雾' },
+    },
     
     morningSteps: {
       step1: { title: '拿白布', description: 'Step 1: Take white cloth' },
