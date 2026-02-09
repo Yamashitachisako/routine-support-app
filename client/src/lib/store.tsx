@@ -17,6 +17,12 @@ const STEP_COUNTS: Record<RoutineType, number> = {
   stretching: 16,
 };
 
+const INTRO_COUNTS: Record<RoutineType, number> = {
+  morning: 4,
+  eyeExercise: 0,
+  stretching: 0,
+};
+
 interface AppState {
   language: Language;
   history: HistoryRecord[];
@@ -60,7 +66,7 @@ const useBaseStore = create<AppState>()(
       }),
       
       nextStep: () => set((state) => {
-        const totalSteps = STEP_COUNTS[state.routineType];
+        const totalSteps = STEP_COUNTS[state.routineType] + INTRO_COUNTS[state.routineType];
         return { currentStepIndex: Math.min(state.currentStepIndex + 1, totalSteps) };
       }),
 

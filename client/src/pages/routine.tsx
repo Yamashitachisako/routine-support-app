@@ -24,6 +24,12 @@ const STEP_COUNTS: Record<string, number> = {
   stretching: 16,
 };
 
+const INTRO_COUNTS: Record<string, number> = {
+  morning: 4,
+  eyeExercise: 0,
+  stretching: 0,
+};
+
 function getStepData(routineType: string, stepKey: string, t: any) {
   if (routineType === 'morning') {
     return t.morningSteps[stepKey];
@@ -34,11 +40,83 @@ function getStepData(routineType: string, stepKey: string, t: any) {
   }
 }
 
+function getIntroData(introKey: string, t: any) {
+  return t.morningIntroSteps[introKey];
+}
+
 function getRoutineLabel(routineType: string, t: any) {
   if (routineType === 'morning') return t.wipeDownRoutine;
   if (routineType === 'eyeExercise') return t.eyeExercise;
   return t.stretchingExercise;
 }
+
+const IntroStep = ({ introKey, onNext, onBack, showBack }: { 
+  introKey: string; 
+  onNext: () => void; 
+  onBack: () => void;
+  showBack: boolean;
+}) => {
+  const { t } = useStore();
+  const introData = getIntroData(introKey, t);
+
+  if (!introData) return null;
+
+  const introIndex = parseInt(introKey.replace('intro', ''));
+  const imagePath = `/images/morning-intro${introIndex}.png`;
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="w-full aspect-video bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center">
+        <img 
+          src={imagePath} 
+          alt={introData.title}
+          className="w-full h-full object-cover absolute inset-0 z-10"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+          <div className="text-8xl font-bold text-primary/20">
+            {introIndex}
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4 flex-1">
+        <div className="inline-block px-3 py-1 bg-accent/20 rounded-full text-sm font-medium text-accent mb-2" data-testid="badge-preparation">
+          {t.preparation}
+        </div>
+        <h2 className="text-2xl md:text-3xl font-heading font-bold text-primary" data-testid={`text-intro-title-${introKey}`}>
+          {introData.title}
+        </h2>
+        <p className="text-lg text-muted-foreground leading-relaxed" data-testid={`text-intro-desc-${introKey}`}>
+          {introData.description}
+        </p>
+      </div>
+
+      <div className="mt-auto pt-6 flex gap-3">
+        {showBack && (
+          <Button 
+            onClick={onBack}
+            variant="outline"
+            className="flex-1 h-16 text-xl rounded-xl shadow-md"
+            data-testid="button-back-intro"
+          >
+            <ChevronLeft className="mr-2 h-6 w-6" />
+            {t.back}
+          </Button>
+        )}
+        <Button 
+          onClick={onNext} 
+          className="flex-1 h-16 text-xl rounded-xl shadow-md"
+          data-testid="button-next-intro"
+        >
+          {t.next} <ChevronRight className="ml-2 h-6 w-6" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const ActionStep = ({ stepKey, onNext, onBack, routineType, showBack }: { 
   stepKey: string; 
@@ -183,6 +261,8 @@ export default function Routine() {
   const [showMiniGame, setShowMiniGame] = useState(false);
 
   const totalSteps = STEP_COUNTS[routineType] || 9;
+  const introCount = INTRO_COUNTS[routineType] || 0;
+  const totalWithIntro = introCount + totalSteps;
 
   const handleHome = () => {
     if (confirm(t.exitConfirmMessage)) {
@@ -201,9 +281,12 @@ export default function Routine() {
     setLocation("/");
   };
 
-  const stepKey = `step${currentStepIndex + 1}`;
-  const isFeedback = currentStepIndex >= totalSteps;
-  const progress = ((currentStepIndex + 1) / (totalSteps + 1)) * 100;
+  const isIntroPhase = currentStepIndex < introCount;
+  const introKey = `intro${currentStepIndex + 1}`;
+  const actualStepIndex = currentStepIndex - introCount;
+  const stepKey = `step${actualStepIndex + 1}`;
+  const isFeedback = currentStepIndex >= totalWithIntro;
+  const progress = ((currentStepIndex + 1) / (totalWithIntro + 1)) * 100;
 
   const routineLabel = getRoutineLabel(routineType, t);
 
@@ -227,8 +310,8 @@ export default function Routine() {
 
           <div className="flex-1 space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground font-medium">
-              <span>{routineLabel} - {t.step} {Math.min(currentStepIndex + 1, totalSteps)}</span>
-              <span>{t.of} {totalSteps}</span>
+              <span>{routineLabel} - {isIntroPhase ? t.preparation : `${t.step} ${Math.min(actualStepIndex + 1, totalSteps)}`}</span>
+              <span>{isIntroPhase ? `${currentStepIndex + 1} / ${introCount}` : `${t.of} ${totalSteps}`}</span>
             </div>
             <Progress value={progress} className="h-3" />
           </div>
@@ -247,6 +330,13 @@ export default function Routine() {
               >
                 {isFeedback ? (
                   <FeedbackStep onShowMiniGame={handleShowMiniGame} />
+                ) : isIntroPhase ? (
+                  <IntroStep
+                    introKey={introKey}
+                    onNext={nextStep}
+                    onBack={prevStep}
+                    showBack={currentStepIndex > 0}
+                  />
                 ) : (
                   <ActionStep 
                     stepKey={stepKey} 
