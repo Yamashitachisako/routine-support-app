@@ -1,7 +1,7 @@
 import { useStore } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Smile, Meh, Frown, Star, Sun, Moon } from "lucide-react";
+import { Smile, Meh, Frown, Star, Sun, Eye, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { ja, enUS, zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -19,9 +19,8 @@ const MoodIcon = ({ feeling }: { feeling: string }) => {
 };
 
 const RoutineTypeIcon = ({ type }: { type: string }) => {
-  if (type === 'afternoon') {
-    return <Moon className="h-4 w-4 text-indigo-400" />;
-  }
+  if (type === 'eyeExercise') return <Eye className="h-4 w-4 text-indigo-400" />;
+  if (type === 'stretching') return <Activity className="h-4 w-4 text-green-400" />;
   return <Sun className="h-4 w-4 text-amber-400" />;
 };
 
@@ -42,10 +41,10 @@ export default function History() {
   };
 
   const getRoutineTypeLabel = (type: string) => {
-    if (type === 'afternoon') {
-      return t.afternoonRoutine;
-    }
-    return t.morningRoutine;
+    if (type === 'eyeExercise') return t.eyeExercise;
+    if (type === 'stretching') return t.stretchingExercise;
+    if (type === 'morning') return t.wipeDownRoutine;
+    return type;
   };
 
   if (isLoading) {

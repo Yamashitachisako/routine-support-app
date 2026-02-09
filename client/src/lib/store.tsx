@@ -4,12 +4,18 @@ import { Language, Translation, translations } from './translations';
 
 export interface HistoryRecord {
   id: string;
-  date: string; // ISO string
+  date: string;
   feeling: 'veryBad' | 'bad' | 'neutral' | 'good' | 'veryGood';
   comment?: string;
 }
 
-export type RoutineType = 'morning' | 'afternoon';
+export type RoutineType = 'morning' | 'eyeExercise' | 'stretching';
+
+const STEP_COUNTS: Record<RoutineType, number> = {
+  morning: 9,
+  eyeExercise: 9,
+  stretching: 16,
+};
 
 interface AppState {
   language: Language;
@@ -17,12 +23,10 @@ interface AppState {
   userName: string;
   routineType: RoutineType;
   
-  // Routine State
   isRoutineActive: boolean;
-  currentStepIndex: number; // 0 to 4 (Step 1 to Step 5)
+  currentStepIndex: number;
   startTime: number | null;
   
-  // Actions
   setLanguage: (lang: Language) => void;
   setUserName: (name: string) => void;
   setRoutineType: (type: RoutineType) => void;
@@ -31,6 +35,7 @@ interface AppState {
   prevStep: () => void;
   exitRoutine: () => void;
   addHistory: (record: Omit<HistoryRecord, 'id'>) => void;
+  getTotalSteps: () => number;
 }
 
 const useBaseStore = create<AppState>()(
@@ -54,9 +59,10 @@ const useBaseStore = create<AppState>()(
         startTime: Date.now() 
       }),
       
-      nextStep: () => set((state) => ({ 
-        currentStepIndex: Math.min(state.currentStepIndex + 1, 5) 
-      })),
+      nextStep: () => set((state) => {
+        const totalSteps = STEP_COUNTS[state.routineType];
+        return { currentStepIndex: Math.min(state.currentStepIndex + 1, totalSteps) };
+      }),
 
       prevStep: () => set((state) => ({
         currentStepIndex: Math.max(state.currentStepIndex - 1, 0)
@@ -77,6 +83,8 @@ const useBaseStore = create<AppState>()(
         currentStepIndex: 0,
         startTime: null
       })),
+
+      getTotalSteps: () => STEP_COUNTS[get().routineType],
     }),
     {
       name: 'health-routine-storage',
@@ -90,7 +98,6 @@ const useBaseStore = create<AppState>()(
   )
 );
 
-// Wrapper hook to inject translations dynamically
 export const useStore = () => {
   const state = useBaseStore();
   const t = translations[state.language];
