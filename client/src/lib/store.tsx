@@ -18,7 +18,7 @@ const STEP_COUNTS: Record<RoutineType, number> = {
 };
 
 const INTRO_COUNTS: Record<RoutineType, number> = {
-  morning: 4,
+  morning: 0,
   eyeExercise: 0,
   stretching: 0,
 };

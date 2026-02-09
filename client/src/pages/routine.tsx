@@ -25,7 +25,7 @@ const STEP_COUNTS: Record<string, number> = {
 };
 
 const INTRO_COUNTS: Record<string, number> = {
-  morning: 4,
+  morning: 0,
   eyeExercise: 0,
   stretching: 0,
 };
