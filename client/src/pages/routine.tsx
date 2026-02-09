@@ -136,7 +136,7 @@ const ActionStep = ({ stepKey, onNext, onBack, routineType, showBack }: {
   return (
     <div className="flex flex-col h-full">
       <div className={`w-full bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center ${
-        isWipeDown ? 'aspect-[4/3] max-w-[280px] mx-auto' : 'aspect-square max-w-[400px] mx-auto'
+        isWipeDown ? 'aspect-[4/3] max-w-[280px] mx-auto' : 'aspect-[3/4] max-w-[300px] mx-auto'
       }`}>
         <img 
           src={imagePath} 
