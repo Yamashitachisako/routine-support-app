@@ -80,8 +80,8 @@ export const translations: Record<Language, Translation> = {
     nameLabel: 'お名前',
     namePlaceholder: 'お名前',
     
-    morningRoutine: '朝のルーティン',
-    afternoonRoutine: '午後のルーティン',
+    morningRoutine: 'Eye Exercise Routine',
+    afternoonRoutine: 'Stretching Routine',
     selectRoutineType: 'ルーティンを選択',
     leaveHome: '家を出る',
     wipeDownRoutine: 'ふきそうじルーティン',
@@ -189,8 +189,8 @@ export const translations: Record<Language, Translation> = {
     nameLabel: 'Name',
     namePlaceholder: 'Your Name',
     
-    morningRoutine: 'Morning Routine',
-    afternoonRoutine: 'Afternoon Routine',
+    morningRoutine: 'Eye Exercise Routine',
+    afternoonRoutine: 'Stretching Routine',
     selectRoutineType: 'Select Routine',
     leaveHome: 'Leave Home',
     wipeDownRoutine: 'Wipe Down Routine',
