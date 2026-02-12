@@ -9,7 +9,6 @@ export default function Settings() {
   const languages: { code: Language; label: string }[] = [
     { code: 'ja', label: t.japanese },
     { code: 'en', label: t.english },
-    { code: 'zh', label: t.chinese },
   ];
 
   return (

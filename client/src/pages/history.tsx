@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Smile, Meh, Frown, Star, Sun, Eye, Activity } from "lucide-react";
 import { format } from "date-fns";
-import { ja, enUS, zhCN } from "date-fns/locale";
+import { ja, enUS } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { getRoutineRecords } from "@/lib/api";
 
@@ -35,7 +35,6 @@ export default function History() {
   const getDateLocale = () => {
     switch (language) {
       case 'ja': return ja;
-      case 'zh': return zhCN;
       default: return enUS;
     }
   };

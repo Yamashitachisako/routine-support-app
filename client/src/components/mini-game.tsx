@@ -40,18 +40,6 @@ export default function MiniGame({ onClose, language }: MiniGameProps) {
           howToPlay: 'スピンボタンを押して、3つ同じ絵柄が揃ったら大当たり！',
           backToHome: 'ホームに戻る',
         };
-      case 'zh':
-        return {
-          spin: '转动！',
-          close: '关闭',
-          winMessages: ['大奖！太棒了！', '恭喜！好运！', '厉害！最棒！'],
-          tryAgain: '再试一次！',
-          title: '奖励游戏',
-          spinsLeft: '剩余次数',
-          greatJob: '日常完成！',
-          howToPlay: '按下转动按钮，如果三个图案一样就中大奖！',
-          backToHome: '返回主页',
-        };
       default:
         return {
           spin: 'Spin!',

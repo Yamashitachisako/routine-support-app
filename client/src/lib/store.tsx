@@ -106,10 +106,12 @@ const useBaseStore = create<AppState>()(
 
 export const useStore = () => {
   const state = useBaseStore();
-  const t = translations[state.language];
+  const lang = state.language in translations ? state.language : 'ja';
+  const t = translations[lang as Language];
   
   return {
     ...state,
+    language: lang as Language,
     t
   };
 };
