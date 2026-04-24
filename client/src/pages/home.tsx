@@ -1,7 +1,7 @@
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity } from "lucide-react";
+import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity, BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,16 @@ import { getRoutineRecords } from "@/lib/api";
 import type { RoutineType } from "@/lib/store";
 
 export default function Home() {
-  const { t, startRoutine, userName, setUserName, routineType, setRoutineType } = useStore();
+  const {
+    t,
+    startRoutine,
+    userName,
+    setUserName,
+    routineType,
+    setRoutineType,
+    language,
+    openOnboarding,
+  } = useStore();
   const [, setLocation] = useLocation();
 
   const { data: history = [] } = useQuery({
@@ -56,6 +65,17 @@ export default function Home() {
         </div>
 
         <div className="w-full max-w-md space-y-6">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-14 w-full justify-center gap-2 rounded-xl text-base touch-manipulation"
+            onClick={openOnboarding}
+            data-testid="button-home-onboarding-guide"
+          >
+            <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
+            {language === "ja" ? "使い方ガイド" : "How to use"}
+          </Button>
+
           <div className="space-y-3">
             <Label className="pl-1 text-muted-foreground text-lg">{t.selectRoutineType}</Label>
             <div className="grid grid-cols-3 gap-3">
