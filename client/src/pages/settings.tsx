@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 export default function Settings() {
-  const { t, language, setLanguage } = useStore();
+  const { t, language, setLanguage, openOnboarding } = useStore();
 
   const languages: { code: Language; label: string }[] = [
     { code: 'ja', label: t.japanese },
@@ -36,6 +36,20 @@ export default function Settings() {
               </Button>
             ))}
           </div>
+        </div>
+
+        <div className="space-y-4 pt-2">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            {language === "ja" ? "ヘルプ" : "Help"}
+          </h3>
+          <Button
+            variant="outline"
+            className="h-14 w-full justify-center rounded-xl text-base"
+            onClick={openOnboarding}
+            data-testid="button-open-onboarding"
+          >
+            {language === "ja" ? "使い方ガイドを表示" : "Show Quick Start Guide"}
+          </Button>
         </div>
       </div>
 
