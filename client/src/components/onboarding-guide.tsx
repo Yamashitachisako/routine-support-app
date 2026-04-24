@@ -1,11 +1,4 @@
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Language } from "@/lib/translations";
 
 type OnboardingGuideProps = {
@@ -56,14 +49,22 @@ export default function OnboardingGuide({
   onLanguageChange,
   onClose,
 }: OnboardingGuideProps) {
+  if (!isOpen) return null;
+
   const content = CONTENT[language];
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[92vw] max-w-xl p-4 sm:p-6 max-h-[85vh] overflow-y-auto rounded-2xl">
-        <DialogHeader className="space-y-3">
+    <div className="fixed inset-0 z-[70]">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60"
+        aria-label={language === "ja" ? "ガイドを閉じる" : "Close guide"}
+        onClick={onClose}
+      />
+      <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-xl max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border bg-background p-4 shadow-xl sm:p-6">
+        <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <DialogTitle className="text-xl sm:text-2xl">{content.title}</DialogTitle>
+            <h2 className="text-xl font-semibold sm:text-2xl">{content.title}</h2>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -87,10 +88,8 @@ export default function OnboardingGuide({
               </Button>
             </div>
           </div>
-          <DialogDescription className="text-sm sm:text-base">
-            {content.description}
-          </DialogDescription>
-        </DialogHeader>
+          <p className="text-sm text-muted-foreground sm:text-base">{content.description}</p>
+        </div>
 
         <ol className="mt-2 space-y-3">
           {content.steps.map((step, index) => (
@@ -116,7 +115,7 @@ export default function OnboardingGuide({
             {content.close}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
