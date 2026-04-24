@@ -55,12 +55,7 @@ export default function OnboardingGuide({
 
   return (
     <div className="fixed inset-0 z-[70]">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/60"
-        aria-label={language === "ja" ? "ガイドを閉じる" : "Close guide"}
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60" />
       <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-xl max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border bg-background p-4 shadow-xl sm:p-6">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">

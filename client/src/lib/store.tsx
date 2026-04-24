@@ -28,7 +28,6 @@ interface AppState {
   history: HistoryRecord[];
   userName: string;
   routineType: RoutineType;
-  hasSeenOnboarding: boolean;
   isOnboardingOpen: boolean;
   
   isRoutineActive: boolean;
@@ -55,8 +54,7 @@ const useBaseStore = create<AppState>()(
       history: [],
       userName: '',
       routineType: 'morning',
-      hasSeenOnboarding: false,
-      isOnboardingOpen: false,
+      isOnboardingOpen: true,
       isRoutineActive: false,
       currentStepIndex: 0,
       startTime: null,
@@ -65,7 +63,7 @@ const useBaseStore = create<AppState>()(
       setUserName: (name) => set({ userName: name }),
       setRoutineType: (type) => set({ routineType: type }),
       openOnboarding: () => set({ isOnboardingOpen: true }),
-      closeOnboarding: () => set({ isOnboardingOpen: false, hasSeenOnboarding: true }),
+      closeOnboarding: () => set({ isOnboardingOpen: false }),
       
       startRoutine: () => set({ 
         isRoutineActive: true, 
@@ -106,8 +104,7 @@ const useBaseStore = create<AppState>()(
         language: state.language, 
         history: state.history,
         userName: state.userName,
-        routineType: state.routineType,
-        hasSeenOnboarding: state.hasSeenOnboarding
+        routineType: state.routineType
       }),
     }
   )
