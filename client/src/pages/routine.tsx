@@ -15,7 +15,7 @@ import {
   Home,
 } from "lucide-react";
 import { createRoutineRecord } from "@/lib/api";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import MiniGame from "@/components/mini-game";
 
 const STEP_COUNTS: Record<string, number> = {
@@ -188,11 +188,13 @@ const ActionStep = ({ stepKey, onNext, onBack, routineType, showBack }: {
 
 const FeedbackStep = ({ onShowMiniGame }: { onShowMiniGame: () => void }) => {
   const { t, userName, routineType } = useStore();
+  const queryClient = useQueryClient();
   const [feeling, setFeeling] = useState<any>(null);
 
   const createRecordMutation = useMutation({
     mutationFn: createRoutineRecord,
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["routine-records"] });
       onShowMiniGame();
     },
   });

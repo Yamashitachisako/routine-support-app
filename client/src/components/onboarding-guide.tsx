@@ -41,6 +41,18 @@ const CONTENT: Record<
       "Your result is saved after completion",
     ],
   },
+  zh: {
+    title: "使用说明",
+    description: "先看这 5 步，就能轻松开始。",
+    close: "关闭",
+    steps: [
+      "选择训练",
+      "输入名字",
+      "按开始",
+      "按顺序做每一步",
+      "完成后会保存记录",
+    ],
+  },
 };
 
 export default function OnboardingGuide({
@@ -51,7 +63,7 @@ export default function OnboardingGuide({
 }: OnboardingGuideProps) {
   if (!isOpen) return null;
 
-  const content = CONTENT[language];
+  const content = CONTENT[language] ?? CONTENT.ja;
 
   return (
     <div className="fixed inset-0 z-[70]">
@@ -60,7 +72,7 @@ export default function OnboardingGuide({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-semibold sm:text-2xl">{content.title}</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -80,6 +92,16 @@ export default function OnboardingGuide({
                 data-testid="button-onboarding-lang-en"
               >
                 English
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={language === "zh" ? "default" : "outline"}
+                className="h-9 px-3"
+                onClick={() => onLanguageChange("zh")}
+                data-testid="button-onboarding-lang-zh"
+              >
+                中文
               </Button>
             </div>
           </div>

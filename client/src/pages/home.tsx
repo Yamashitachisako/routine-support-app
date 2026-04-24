@@ -1,13 +1,20 @@
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity, BookOpen } from "lucide-react";
+import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity, BookOpen, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { getRoutineRecords } from "@/lib/api";
 import type { RoutineType } from "@/lib/store";
+import { buildWeeklySummaryV1 } from "@/lib/weeklySummary";
+
+function formatWeeklyAchievements(template: string, count: number): string {
+  return template.replace(/\{count\}/g, String(count));
+}
+
+const MAX_WEEKLY_STARS_SHOWN = 18;
 
 export default function Home() {
   const {
@@ -17,7 +24,6 @@ export default function Home() {
     setUserName,
     routineType,
     setRoutineType,
-    language,
     openOnboarding,
   } = useStore();
   const [, setLocation] = useLocation();
@@ -40,6 +46,10 @@ export default function Home() {
            d.getMonth() === today.getMonth() && 
            d.getFullYear() === today.getFullYear();
   }).length;
+
+  const weeklySummary = buildWeeklySummaryV1(history);
+  const weekCount = weeklySummary.completionCount;
+  const starsShown = Math.min(weekCount, MAX_WEEKLY_STARS_SHOWN);
 
   const routineButtons: { type: RoutineType; label: string; icon: React.ReactNode }[] = [
     { type: 'morning', label: t.wipeDownRoutine, icon: <Sparkles className="h-6 w-6" /> },
@@ -73,7 +83,7 @@ export default function Home() {
             data-testid="button-home-onboarding-guide"
           >
             <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
-            {language === "ja" ? "使い方ガイド" : "How to use"}
+            {t.howToUseGuide}
           </Button>
 
           <div className="space-y-3">
@@ -140,6 +150,49 @@ export default function Home() {
               <Calendar className="h-6 w-6" />
             </Button>
           </Link>
+        </CardContent>
+      </Card>
+
+      <Card
+        className="glass-card border-none shadow-sm"
+        data-week-key={weeklySummary.weekKey}
+        data-week-completion-count={weeklySummary.completionCount}
+      >
+        <CardContent className="p-6 md:p-8 space-y-4">
+          <div className="text-center sm:text-left space-y-1">
+            <p className="text-base font-medium text-muted-foreground">{t.weeklySummaryTitle}</p>
+            <p className="text-lg sm:text-xl font-semibold text-foreground">
+              {formatWeeklyAchievements(t.weeklyAchievementsLine, weekCount)}
+            </p>
+          </div>
+
+          {weekCount > 0 && (
+            <div
+              className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-3 text-center text-base sm:text-lg font-semibold text-primary"
+              data-testid="banner-weekly-encouragement"
+            >
+              {t.weeklyEncouragement}
+            </div>
+          )}
+
+          <div
+            className="flex flex-wrap justify-center gap-2 sm:gap-2.5 min-h-[2rem]"
+            role="img"
+            aria-label={formatWeeklyAchievements(t.weeklyAchievementsLine, weekCount)}
+          >
+            {Array.from({ length: starsShown }).map((_, i) => (
+              <Star
+                key={i}
+                className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 fill-amber-400 text-amber-600 touch-manipulation"
+                aria-hidden
+              />
+            ))}
+          </div>
+          {weekCount > MAX_WEEKLY_STARS_SHOWN && (
+            <p className="text-center text-sm text-muted-foreground" data-testid="text-weekly-stars-overflow">
+              +{weekCount - MAX_WEEKLY_STARS_SHOWN}
+            </p>
+          )}
         </CardContent>
       </Card>
       

@@ -1,4 +1,4 @@
-export type Language = 'ja' | 'en';
+export type Language = 'ja' | 'en' | 'zh';
 
 interface StepContent {
   title: string;
@@ -54,6 +54,7 @@ export interface Translation {
   language: string;
   japanese: string;
   english: string;
+  chinese: string;
   about: string;
   version: string;
   
@@ -66,10 +67,33 @@ export interface Translation {
   eyeExerciseSteps: Record<string, StepContent>;
   stretchingSteps: Record<string, StepContent>;
   preparation: string;
+
+  rewardGameTitle: string;
+  rewardGameSubtitle: string;
+  rewardYatta: string;
+  rewardBackToHome: string;
+  rewardStar: string;
+  rewardBalloon: string;
+  rewardFruit: string;
+  rewardFish: string;
+  rewardPresent: string;
+
+  rewardGuideTitle: string;
+  rewardGuideLine1: string;
+  rewardGuideLine2: string;
+  rewardGuideLine3: string;
+  rewardGuideStartButton: string;
+
+  weeklySummaryTitle: string;
+  weeklyAchievementsLine: string;
+  weeklyEncouragement: string;
+
+  howToUseGuide: string;
+  settingsHelp: string;
+  showOnboardingGuide: string;
 }
 
-export const translations: Record<Language, Translation> = {
-  ja: {
+const ja: Translation = {
     appTitle: 'ルーティンサポート',
     startRoutine: 'ルーティンを開始',
     todayProgress: '今日の進捗',
@@ -118,6 +142,7 @@ export const translations: Record<Language, Translation> = {
     language: '言語',
     japanese: '日本語',
     english: 'English',
+    chinese: '中文',
 
     about: 'アプリについて',
     version: 'バージョン',
@@ -126,6 +151,30 @@ export const translations: Record<Language, Translation> = {
     loading: '読み込み中...',
     noHistory: 'まだ記録がありません',
     preparation: '準備',
+
+    rewardGameTitle: 'ご褒美宝箱',
+    rewardGameSubtitle: '宝箱を1つタップしてね',
+    rewardYatta: 'やったね！',
+    rewardBackToHome: 'ホームに戻る',
+    rewardStar: 'キラキラの星',
+    rewardBalloon: 'カラフルな風船',
+    rewardFruit: 'フルーツ',
+    rewardFish: 'お魚さん',
+    rewardPresent: 'プレゼント',
+
+    rewardGuideTitle: 'ご褒美ゲーム',
+    rewardGuideLine1: '宝箱を1つ選んでね',
+    rewardGuideLine2: '中からご褒美が出るよ',
+    rewardGuideLine3: '今日もよくがんばりました',
+    rewardGuideStartButton: '宝箱にいく',
+
+    weeklySummaryTitle: '今週のがんばり',
+    weeklyAchievementsLine: '今週 {count} 回達成',
+    weeklyEncouragement: '今週もがんばったね！',
+
+    howToUseGuide: '使い方ガイド',
+    settingsHelp: 'ヘルプ',
+    showOnboardingGuide: '使い方ガイドを表示',
     
     morningIntroSteps: {
       intro1: { title: '白い布', description: '白い布を用意してください' },
@@ -176,9 +225,9 @@ export const translations: Record<Language, Translation> = {
       step15: { title: 'Stretching Exercise – Step 15 / 16', description: 'Stretching exercise Step bar at the top – Step 15 / 16\nStep 15: Raise right leg up, rotate ankle in circle motion\ncount to 10\nBack button to return to previous step\nNext button to next step' },
       step16: { title: 'Stretching Exercise – Step 16 / 16', description: 'Stretching exercise Step bar at the top – Step 16 / 16\nStep 16: Raise left leg up, rotate ankle in circle motion\ncount to 10\nBack button to return to previous step\nNext button to next step' },
     },
-  },
-  
-  en: {
+};
+
+const en: Translation = {
     appTitle: 'Routine Support',
     startRoutine: 'Start Routine',
     todayProgress: "Today's Progress",
@@ -227,6 +276,7 @@ export const translations: Record<Language, Translation> = {
     language: 'Language',
     japanese: '日本語',
     english: 'English',
+    chinese: '中文',
 
     about: 'About',
     version: 'Version',
@@ -235,6 +285,30 @@ export const translations: Record<Language, Translation> = {
     loading: 'Loading...',
     noHistory: 'No records yet',
     preparation: 'Preparation',
+
+    rewardGameTitle: 'Treasure Chest Surprise',
+    rewardGameSubtitle: 'Tap one treasure chest',
+    rewardYatta: 'Great job!',
+    rewardBackToHome: 'Back to Home',
+    rewardStar: 'Sparkly star',
+    rewardBalloon: 'Colorful balloon',
+    rewardFruit: 'Fruit',
+    rewardFish: 'Little fish',
+    rewardPresent: 'Present',
+
+    rewardGuideTitle: 'Treasure game',
+    rewardGuideLine1: 'Pick one treasure chest',
+    rewardGuideLine2: 'A surprise reward is inside',
+    rewardGuideLine3: 'You did great today',
+    rewardGuideStartButton: 'Go to chests',
+
+    weeklySummaryTitle: 'This week',
+    weeklyAchievementsLine: 'This week: {count} completed',
+    weeklyEncouragement: 'You did great this week too!',
+
+    howToUseGuide: 'How to use',
+    settingsHelp: 'Help',
+    showOnboardingGuide: 'Show Quick Start Guide',
     
     morningIntroSteps: {
       intro1: { title: 'White Cloth', description: 'Prepare the white cloth' },
@@ -285,5 +359,86 @@ export const translations: Record<Language, Translation> = {
       step15: { title: 'Stretching Exercise – Step 15 / 16', description: 'Stretching exercise Step bar at the top – Step 15 / 16\nStep 15: Raise right leg up, rotate ankle in circle motion\ncount to 10\nBack button to return to previous step\nNext button to next step' },
       step16: { title: 'Stretching Exercise – Step 16 / 16', description: 'Stretching exercise Step bar at the top – Step 16 / 16\nStep 16: Raise left leg up, rotate ankle in circle motion\ncount to 10\nBack button to return to previous step\nNext button to next step' },
     },
+};
+
+const zh: Translation = {
+  ...en,
+  appTitle: '日常训练助手',
+  startRoutine: '开始训练',
+  todayProgress: '今日进度',
+  completedTimes: '次完成',
+  settings: '设置',
+  enterName: '请输入你的名字',
+  nameLabel: '名字',
+  namePlaceholder: '你的名字',
+  morningRoutine: '眼部运动',
+  afternoonRoutine: '拉伸运动',
+  selectRoutineType: '选择训练',
+  leaveHome: '出门',
+  wipeDownRoutine: '擦拭整理',
+  eyeExercise: '眼部运动',
+  stretchingExercise: '拉伸运动',
+  step: '步骤',
+  of: '/',
+  next: '下一步',
+  back: '返回',
+  skip: '跳过',
+  pause: '暂停',
+  resume: '继续',
+  exitRoutine: '退出',
+  exitConfirmTitle: '要退出训练吗？',
+  exitConfirmMessage: '进度不会被保存。',
+  cancel: '取消',
+  confirm: '确定',
+  finish: '完成',
+  minutesShort: '分钟',
+  secondsShort: '秒',
+  timeRemaining: '剩余时间',
+  howDoYouFeel: '现在心情怎么样？',
+  veryBad: '很不好',
+  bad: '不好',
+  neutral: '一般',
+  good: '好',
+  veryGood: '很好',
+  optionalComment: '留言（可选）',
+  complete: '完成',
+  greatJob: '真棒，',
+  language: '语言',
+  japanese: '日本語',
+  english: 'English',
+  chinese: '中文',
+  about: '关于',
+  version: '版本',
+  history: '历史记录',
+  loading: '加载中…',
+  noHistory: '还没有记录',
+  preparation: '准备',
+  rewardGameTitle: '宝箱奖励',
+  rewardGameSubtitle: '点按一个宝箱',
+  rewardYatta: '做得好！',
+  rewardBackToHome: '回到首页',
+  rewardStar: '星星',
+  rewardBalloon: '气球',
+  rewardFruit: '水果',
+  rewardFish: '小鱼',
+  rewardPresent: '礼物',
+  rewardGuideTitle: '宝箱游戏',
+  rewardGuideLine1: '请选一个宝箱',
+  rewardGuideLine2: '里面会有奖励哦',
+  rewardGuideLine3: '今天你已经很棒了',
+  rewardGuideStartButton: '去选宝箱',
+  weeklySummaryTitle: '本周表现',
+  weeklyAchievementsLine: '本周已完成 {count} 次',
+  weeklyEncouragement: '这一周也很努力！',
+  howToUseGuide: '使用说明',
+  settingsHelp: '帮助',
+  showOnboardingGuide: '显示使用说明',
+  morningIntroSteps: {
+    intro1: { title: '白布', description: '请准备白布' },
+    intro2: { title: '绿布', description: '请准备绿布' },
+    intro3: { title: '粉红色水桶', description: '请准备粉红色水桶' },
+    intro4: { title: '消毒液喷雾', description: '请准备消毒液喷雾' },
   },
 };
+
+export const translations: Record<Language, Translation> = { ja, en, zh };

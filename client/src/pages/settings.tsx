@@ -9,6 +9,7 @@ export default function Settings() {
   const languages: { code: Language; label: string }[] = [
     { code: 'ja', label: t.japanese },
     { code: 'en', label: t.english },
+    { code: 'zh', label: t.chinese },
   ];
 
   return (
@@ -40,7 +41,7 @@ export default function Settings() {
 
         <div className="space-y-4 pt-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            {language === "ja" ? "ヘルプ" : "Help"}
+            {t.settingsHelp}
           </h3>
           <Button
             variant="outline"
@@ -48,7 +49,7 @@ export default function Settings() {
             onClick={openOnboarding}
             data-testid="button-open-onboarding"
           >
-            {language === "ja" ? "使い方ガイドを表示" : "Show Quick Start Guide"}
+            {t.showOnboardingGuide}
           </Button>
         </div>
       </div>
