@@ -79,10 +79,12 @@ export interface Translation {
   rewardPresent: string;
 
   rewardGuideTitle: string;
-  rewardGuideLine1: string;
-  rewardGuideLine2: string;
-  rewardGuideLine3: string;
+  rewardGuideTapStars: string;
+  rewardGuidePopBalloons: string;
+  rewardGuidePickChest: string;
   rewardGuideStartButton: string;
+  rewardPlayHeadingStars: string;
+  rewardPlayHeadingBalloons: string;
 
   weeklySummaryTitle: string;
   weeklyAchievementsLine: string;
@@ -162,11 +164,13 @@ const ja: Translation = {
     rewardFish: 'お魚さん',
     rewardPresent: 'プレゼント',
 
-    rewardGuideTitle: 'ご褒美ゲーム',
-    rewardGuideLine1: '宝箱を1つ選んでね',
-    rewardGuideLine2: '中からご褒美が出るよ',
-    rewardGuideLine3: '今日もよくがんばりました',
-    rewardGuideStartButton: '宝箱にいく',
+    rewardGuideTitle: 'ご褒美タイム',
+    rewardGuideTapStars: '星をタップして集めよう！',
+    rewardGuidePopBalloons: '風船をタップして割ろう！',
+    rewardGuidePickChest: '宝箱を1つタップしてね！',
+    rewardGuideStartButton: 'はじめる',
+    rewardPlayHeadingStars: '星をあつめよう',
+    rewardPlayHeadingBalloons: '風船あそび',
 
     weeklySummaryTitle: '今週のがんばり',
     weeklyAchievementsLine: '今週 {count} 回達成',
@@ -296,11 +300,13 @@ const en: Translation = {
     rewardFish: 'Little fish',
     rewardPresent: 'Present',
 
-    rewardGuideTitle: 'Treasure game',
-    rewardGuideLine1: 'Pick one treasure chest',
-    rewardGuideLine2: 'A surprise reward is inside',
-    rewardGuideLine3: 'You did great today',
-    rewardGuideStartButton: 'Go to chests',
+    rewardGuideTitle: 'Reward time!',
+    rewardGuideTapStars: 'Tap the stars to collect them!',
+    rewardGuidePopBalloons: 'Tap the balloons to pop them!',
+    rewardGuidePickChest: 'Tap one treasure chest!',
+    rewardGuideStartButton: "Let's go!",
+    rewardPlayHeadingStars: 'Collect the stars',
+    rewardPlayHeadingBalloons: 'Balloon pop',
 
     weeklySummaryTitle: 'This week',
     weeklyAchievementsLine: 'This week: {count} completed',
@@ -422,11 +428,13 @@ const zh: Translation = {
   rewardFruit: '水果',
   rewardFish: '小鱼',
   rewardPresent: '礼物',
-  rewardGuideTitle: '宝箱游戏',
-  rewardGuideLine1: '请选一个宝箱',
-  rewardGuideLine2: '里面会有奖励哦',
-  rewardGuideLine3: '今天你已经很棒了',
-  rewardGuideStartButton: '去选宝箱',
+  rewardGuideTitle: '奖励时间！',
+  rewardGuideTapStars: '点击星星来收集它们！',
+  rewardGuidePopBalloons: '点击气球戳破它们！',
+  rewardGuidePickChest: '点按一个宝箱！',
+  rewardGuideStartButton: '开始',
+  rewardPlayHeadingStars: '收集星星',
+  rewardPlayHeadingBalloons: '戳气球',
   weeklySummaryTitle: '本周表现',
   weeklyAchievementsLine: '本周已完成 {count} 次',
   weeklyEncouragement: '这一周也很努力！',

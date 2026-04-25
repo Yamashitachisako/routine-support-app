@@ -190,22 +190,25 @@ const FeedbackStep = ({ onShowMiniGame }: { onShowMiniGame: () => void }) => {
   const { t, userName, routineType } = useStore();
   const queryClient = useQueryClient();
   const [feeling, setFeeling] = useState<any>(null);
+  const [hasPressedFinish, setHasPressedFinish] = useState(false);
 
   const createRecordMutation = useMutation({
     mutationFn: createRoutineRecord,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["routine-records"] });
-      onShowMiniGame();
     },
   });
 
   const handleSubmit = () => {
-    const submittedFeeling = feeling || 'good';
+    if (hasPressedFinish) return;
+    setHasPressedFinish(true);
+    const submittedFeeling = feeling || "good";
     createRecordMutation.mutate({
       userName,
       feeling: submittedFeeling,
       routineType,
     });
+    onShowMiniGame();
   };
 
   const feelings = [
@@ -249,7 +252,7 @@ const FeedbackStep = ({ onShowMiniGame }: { onShowMiniGame: () => void }) => {
       <div className="mt-auto">
         <Button
           onClick={handleSubmit}
-          disabled={createRecordMutation.isPending}
+          disabled={hasPressedFinish}
           className="w-full h-16 text-xl rounded-xl shadow-md"
           data-testid="button-finish"
         >
@@ -298,7 +301,11 @@ export default function Routine() {
   return (
     <>
       {showMiniGame && (
-        <MiniGame onClose={handleCloseMiniGame} language={language} />
+        <MiniGame
+          routineType={routineType}
+          onClose={handleCloseMiniGame}
+          language={language}
+        />
       )}
 
       <div className="flex flex-col h-full gap-4">
