@@ -93,6 +93,56 @@ export interface Translation {
   howToUseGuide: string;
   settingsHelp: string;
   showOnboardingGuide: string;
+
+  // ----- Phase 1: custom routines & admin -----
+  standardRoutinesTitle: string;
+  customRoutinesTitle: string;
+  noCustomRoutines: string;
+  manageRoutines: string;
+  goToAdmin: string;
+
+  adminTitle: string;
+  adminBackToApp: string;
+  adminRoutinesTitle: string;
+  adminRoutineCreate: string;
+  adminRoutineEdit: string;
+  adminFieldCategory: string;
+  adminFieldTitle: string;
+  adminFieldIcon: string;
+  adminFieldRewardGame: string;
+  adminFieldOrder: string;
+  adminFieldVisible: string;
+  adminFieldSteps: string;
+  adminAddStep: string;
+  adminRemoveStep: string;
+  adminStepNumber: string;
+  adminStepTitle: string;
+  adminStepDescription: string;
+  adminStepImageUrl: string;
+  adminLanguageSection: string;
+  adminLanguageJa: string;
+  adminLanguageEn: string;
+  adminLanguageZh: string;
+  adminSave: string;
+  adminCancel: string;
+  adminDelete: string;
+  adminConfirmDelete: string;
+  adminToggleVisible: string;
+  adminMoveUp: string;
+  adminMoveDown: string;
+  adminCategoryMorning: string;
+  adminCategoryNoon: string;
+  adminCategoryEvening: string;
+  adminCategoryCustom: string;
+  adminRewardStar: string;
+  adminRewardBalloon: string;
+  adminRewardChest: string;
+  adminSavedToast: string;
+  adminDeletedToast: string;
+  adminLoadError: string;
+  adminEmptyState: string;
+  adminTitleRequired: string;
+  adminAtLeastOneStep: string;
 }
 
 const ja: Translation = {
@@ -105,8 +155,8 @@ const ja: Translation = {
     nameLabel: 'お名前',
     namePlaceholder: 'お名前',
     
-    morningRoutine: 'Eye Exercise Routine',
-    afternoonRoutine: 'Stretching Routine',
+    morningRoutine: '目の体操ルーティン',
+    afternoonRoutine: 'ストレッチルーティン',
     selectRoutineType: 'ルーティンを選択',
     leaveHome: '家を出る',
     wipeDownRoutine: 'ふきそうじルーティン',
@@ -179,7 +229,56 @@ const ja: Translation = {
     howToUseGuide: '使い方ガイド',
     settingsHelp: 'ヘルプ',
     showOnboardingGuide: '使い方ガイドを表示',
-    
+
+    standardRoutinesTitle: '標準ルーティン',
+    customRoutinesTitle: '追加ルーティン',
+    noCustomRoutines: 'まだ追加ルーティンはありません',
+    manageRoutines: 'ルーティンを管理',
+    goToAdmin: '管理画面へ',
+
+    adminTitle: '管理者画面',
+    adminBackToApp: 'アプリへ戻る',
+    adminRoutinesTitle: '追加ルーティン管理',
+    adminRoutineCreate: '新しいルーティンを追加',
+    adminRoutineEdit: 'ルーティンを編集',
+    adminFieldCategory: 'カテゴリ',
+    adminFieldTitle: 'ルーティン名',
+    adminFieldIcon: 'アイコン',
+    adminFieldRewardGame: 'ご褒美ゲーム',
+    adminFieldOrder: '表示順',
+    adminFieldVisible: '表示する',
+    adminFieldSteps: 'ステップ',
+    adminAddStep: 'ステップを追加',
+    adminRemoveStep: '削除',
+    adminStepNumber: 'ステップ',
+    adminStepTitle: '見出し',
+    adminStepDescription: '説明',
+    adminStepImageUrl: '画像URL（任意）',
+    adminLanguageSection: '言語',
+    adminLanguageJa: '日本語',
+    adminLanguageEn: 'English',
+    adminLanguageZh: '中文',
+    adminSave: '保存',
+    adminCancel: 'キャンセル',
+    adminDelete: '削除',
+    adminConfirmDelete: 'このルーティンを削除しますか？',
+    adminToggleVisible: '表示切替',
+    adminMoveUp: '上へ',
+    adminMoveDown: '下へ',
+    adminCategoryMorning: '朝',
+    adminCategoryNoon: '昼',
+    adminCategoryEvening: '夕',
+    adminCategoryCustom: 'その他',
+    adminRewardStar: '星集め',
+    adminRewardBalloon: '風船割り',
+    adminRewardChest: '宝箱',
+    adminSavedToast: '保存しました',
+    adminDeletedToast: '削除しました',
+    adminLoadError: '読み込みに失敗しました',
+    adminEmptyState: 'まだ追加ルーティンはありません。「新しいルーティンを追加」から作成してください。',
+    adminTitleRequired: 'ルーティン名を入力してください（少なくとも1言語）',
+    adminAtLeastOneStep: 'ステップを1つ以上追加してください',
+
     morningIntroSteps: {
       intro1: { title: '白い布', description: '白い布を用意してください' },
       intro2: { title: '緑の布', description: '緑の布を用意してください' },
@@ -315,7 +414,56 @@ const en: Translation = {
     howToUseGuide: 'How to use',
     settingsHelp: 'Help',
     showOnboardingGuide: 'Show Quick Start Guide',
-    
+
+    standardRoutinesTitle: 'Standard routines',
+    customRoutinesTitle: 'Added routines',
+    noCustomRoutines: 'No added routines yet',
+    manageRoutines: 'Manage routines',
+    goToAdmin: 'Go to admin',
+
+    adminTitle: 'Admin',
+    adminBackToApp: 'Back to app',
+    adminRoutinesTitle: 'Added routines',
+    adminRoutineCreate: 'Add a new routine',
+    adminRoutineEdit: 'Edit routine',
+    adminFieldCategory: 'Category',
+    adminFieldTitle: 'Routine title',
+    adminFieldIcon: 'Icon',
+    adminFieldRewardGame: 'Reward game',
+    adminFieldOrder: 'Display order',
+    adminFieldVisible: 'Visible',
+    adminFieldSteps: 'Steps',
+    adminAddStep: 'Add step',
+    adminRemoveStep: 'Remove',
+    adminStepNumber: 'Step',
+    adminStepTitle: 'Title',
+    adminStepDescription: 'Description',
+    adminStepImageUrl: 'Image URL (optional)',
+    adminLanguageSection: 'Language',
+    adminLanguageJa: '日本語',
+    adminLanguageEn: 'English',
+    adminLanguageZh: '中文',
+    adminSave: 'Save',
+    adminCancel: 'Cancel',
+    adminDelete: 'Delete',
+    adminConfirmDelete: 'Delete this routine?',
+    adminToggleVisible: 'Toggle visibility',
+    adminMoveUp: 'Move up',
+    adminMoveDown: 'Move down',
+    adminCategoryMorning: 'Morning',
+    adminCategoryNoon: 'Noon',
+    adminCategoryEvening: 'Evening',
+    adminCategoryCustom: 'Other',
+    adminRewardStar: 'Star collect',
+    adminRewardBalloon: 'Balloon pop',
+    adminRewardChest: 'Treasure chest',
+    adminSavedToast: 'Saved',
+    adminDeletedToast: 'Deleted',
+    adminLoadError: 'Failed to load',
+    adminEmptyState: 'No added routines yet. Tap "Add a new routine" to create one.',
+    adminTitleRequired: 'Please enter a routine title (at least one language)',
+    adminAtLeastOneStep: 'Please add at least one step',
+
     morningIntroSteps: {
       intro1: { title: 'White Cloth', description: 'Prepare the white cloth' },
       intro2: { title: 'Green Cloth', description: 'Prepare the green cloth' },
@@ -441,6 +589,56 @@ const zh: Translation = {
   howToUseGuide: '使用说明',
   settingsHelp: '帮助',
   showOnboardingGuide: '显示使用说明',
+
+  standardRoutinesTitle: '标准训练',
+  customRoutinesTitle: '新增训练',
+  noCustomRoutines: '还没有新增训练',
+  manageRoutines: '管理训练',
+  goToAdmin: '前往管理',
+
+  adminTitle: '管理后台',
+  adminBackToApp: '返回应用',
+  adminRoutinesTitle: '新增训练管理',
+  adminRoutineCreate: '新增一个训练',
+  adminRoutineEdit: '编辑训练',
+  adminFieldCategory: '分类',
+  adminFieldTitle: '训练名称',
+  adminFieldIcon: '图标',
+  adminFieldRewardGame: '奖励游戏',
+  adminFieldOrder: '显示顺序',
+  adminFieldVisible: '显示',
+  adminFieldSteps: '步骤',
+  adminAddStep: '新增步骤',
+  adminRemoveStep: '删除',
+  adminStepNumber: '步骤',
+  adminStepTitle: '标题',
+  adminStepDescription: '说明',
+  adminStepImageUrl: '图片链接（可选）',
+  adminLanguageSection: '语言',
+  adminLanguageJa: '日本語',
+  adminLanguageEn: 'English',
+  adminLanguageZh: '中文',
+  adminSave: '保存',
+  adminCancel: '取消',
+  adminDelete: '删除',
+  adminConfirmDelete: '确定要删除这个训练吗？',
+  adminToggleVisible: '切换显示',
+  adminMoveUp: '上移',
+  adminMoveDown: '下移',
+  adminCategoryMorning: '早上',
+  adminCategoryNoon: '中午',
+  adminCategoryEvening: '傍晚',
+  adminCategoryCustom: '其他',
+  adminRewardStar: '收集星星',
+  adminRewardBalloon: '戳气球',
+  adminRewardChest: '宝箱',
+  adminSavedToast: '已保存',
+  adminDeletedToast: '已删除',
+  adminLoadError: '加载失败',
+  adminEmptyState: '还没有新增训练。点击"新增一个训练"开始创建。',
+  adminTitleRequired: '请输入训练名称（至少一种语言）',
+  adminAtLeastOneStep: '请至少添加一个步骤',
+
   morningIntroSteps: {
     intro1: { title: '白布', description: '请准备白布' },
     intro2: { title: '绿布', description: '请准备绿布' },

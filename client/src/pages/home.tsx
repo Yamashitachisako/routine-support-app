@@ -1,7 +1,19 @@
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { Play, Calendar, ChevronRight, User, Sparkles, Eye, Activity, BookOpen, Star } from "lucide-react";
+import {
+  Play,
+  Calendar,
+  ChevronRight,
+  User,
+  Sparkles,
+  Eye,
+  Activity,
+  BookOpen,
+  Star,
+  Settings as SettingsIcon,
+  Plus,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getRoutineRecords } from "@/lib/api";
 import type { RoutineType } from "@/lib/store";
 import { buildWeeklySummaryV1 } from "@/lib/weeklySummary";
+import { useVisibleCustomRoutines, pickI18nText } from "@/hooks/useCustomRoutines";
 
 function formatWeeklyAchievements(template: string, count: number): string {
   return template.replace(/\{count\}/g, String(count));
@@ -19,11 +32,14 @@ const MAX_WEEKLY_STARS_SHOWN = 18;
 export default function Home() {
   const {
     t,
+    language,
     startRoutine,
     userName,
     setUserName,
     routineType,
     setRoutineType,
+    activeCustomRoutineId,
+    setActiveCustomRoutineId,
     openOnboarding,
   } = useStore();
   const [, setLocation] = useLocation();
@@ -32,6 +48,9 @@ export default function Home() {
     queryKey: ['routine-records'],
     queryFn: getRoutineRecords,
   });
+
+  const customRoutinesQuery = useVisibleCustomRoutines();
+  const customRoutines = customRoutinesQuery.data ?? [];
 
   const handleStart = () => {
     if (!userName.trim()) return;
@@ -42,8 +61,8 @@ export default function Home() {
   const todayCount = history.filter(h => {
     const d = new Date(h.date);
     const today = new Date();
-    return d.getDate() === today.getDate() && 
-           d.getMonth() === today.getMonth() && 
+    return d.getDate() === today.getDate() &&
+           d.getMonth() === today.getMonth() &&
            d.getFullYear() === today.getFullYear();
   }).length;
 
@@ -51,23 +70,32 @@ export default function Home() {
   const weekCount = weeklySummary.completionCount;
   const starsShown = Math.min(weekCount, MAX_WEEKLY_STARS_SHOWN);
 
-  const routineButtons: { type: RoutineType; label: string; icon: React.ReactNode }[] = [
+  const standardRoutineButtons: { type: RoutineType; label: string; icon: React.ReactNode }[] = [
     { type: 'morning', label: t.wipeDownRoutine, icon: <Sparkles className="h-6 w-6" /> },
     { type: 'eyeExercise', label: t.morningRoutine, icon: <Eye className="h-6 w-6" /> },
     { type: 'stretching', label: t.afternoonRoutine, icon: <Activity className="h-6 w-6" /> },
   ];
 
+  const handleSelectStandard = (type: RoutineType) => {
+    setRoutineType(type);
+    // setRoutineType 側で activeCustomRoutineId は null にクリアされる
+  };
+
+  const handleSelectCustom = (id: string) => {
+    setActiveCustomRoutineId(id);
+  };
+
   return (
     <div className="flex flex-col gap-6 flex-1 h-full">
       <section className="flex-1 flex flex-col justify-center items-center text-center gap-8 py-6">
         <div className="relative w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl border-4 border-white">
-           <img 
-            src="/images/wellness-hero.png" 
-            alt="Wellness" 
+           <img
+            src="/images/wellness-hero.png"
+            alt="Wellness"
             className="w-full h-full object-cover"
-          /> 
+          />
         </div>
-        
+
         <div className="space-y-2 max-w-md">
           <h2 className="text-3xl md:text-4xl font-heading font-medium text-foreground">
             {t.appTitle}
@@ -86,32 +114,64 @@ export default function Home() {
             {t.howToUseGuide}
           </Button>
 
+          {/* 標準ルーティン (固定・編集不可) */}
           <div className="space-y-3">
-            <Label className="pl-1 text-muted-foreground text-lg">{t.selectRoutineType}</Label>
+            <Label className="pl-1 text-muted-foreground text-lg">{t.standardRoutinesTitle}</Label>
             <div className="grid grid-cols-3 gap-3">
-              {routineButtons.map(({ type, label, icon }) => (
-                <button
-                  key={type}
-                  onClick={() => setRoutineType(type)}
-                  className={`flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-xl transition-all font-medium text-base ${
-                    routineType === type
-                      ? 'bg-primary text-white shadow-lg scale-105'
-                      : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
-                  }`}
-                  data-testid={`button-routine-type-${type}`}
-                >
-                  {icon}
-                  <span className="text-sm leading-tight">{label}</span>
-                </button>
-              ))}
+              {standardRoutineButtons.map(({ type, label, icon }) => {
+                const selected = !activeCustomRoutineId && routineType === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handleSelectStandard(type)}
+                    className={`flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-xl transition-all font-medium text-base ${
+                      selected
+                        ? 'bg-primary text-white shadow-lg scale-105'
+                        : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
+                    }`}
+                    data-testid={`button-routine-type-${type}`}
+                  >
+                    {icon}
+                    <span className="text-sm leading-tight">{label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
+
+          {/* 追加ルーティン (DB / 管理者が作成) */}
+          {customRoutines.length > 0 && (
+            <div className="space-y-3">
+              <Label className="pl-1 text-muted-foreground text-lg">{t.customRoutinesTitle}</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {customRoutines.map((routine) => {
+                  const selected = activeCustomRoutineId === routine.id;
+                  const label = pickI18nText(routine.titleI18n, language);
+                  return (
+                    <button
+                      key={routine.id}
+                      onClick={() => handleSelectCustom(routine.id)}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-xl transition-all font-medium text-base ${
+                        selected
+                          ? 'bg-primary text-white shadow-lg scale-105'
+                          : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
+                      }`}
+                      data-testid={`button-custom-routine-${routine.id}`}
+                    >
+                      <Sparkles className="h-6 w-6" />
+                      <span className="text-sm leading-tight">{label || routine.id.slice(0, 8)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3 text-left">
             <Label htmlFor="username" className="pl-1 text-muted-foreground text-lg">{t.enterName}</Label>
             <div className="relative">
               <User className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
-              <Input 
+              <Input
                 id="username"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
@@ -122,10 +182,10 @@ export default function Home() {
             </div>
           </div>
 
-          <Button 
-            onClick={handleStart} 
+          <Button
+            onClick={handleStart}
             disabled={!userName.trim()}
-            size="lg" 
+            size="lg"
             className="rounded-full w-full h-16 text-xl font-medium shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
             data-testid="button-start-routine"
           >
@@ -144,7 +204,7 @@ export default function Home() {
               <span className="text-base text-muted-foreground">{t.completedTimes}</span>
             </div>
           </div>
-          
+
           <Link href="/history">
             <Button variant="outline" size="icon" className="rounded-full h-14 w-14 border-primary/20 text-primary hover:bg-primary/5" data-testid="link-history">
               <Calendar className="h-6 w-6" />
@@ -195,16 +255,38 @@ export default function Home() {
           )}
         </CardContent>
       </Card>
-      
-      <Link href="/history">
-         <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
+
+      <div className="flex flex-col gap-2">
+        <Link href="/history">
+           <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
+              <span className="font-medium text-lg text-foreground flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-primary" />
+                {t.history}
+              </span>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+           </div>
+        </Link>
+
+        <Link href="/admin/routines">
+          <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-admin-routines">
             <span className="font-medium text-lg text-foreground flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-primary" />
-              {t.history}
+              <SettingsIcon className="h-5 w-5 text-primary" />
+              {t.manageRoutines}
             </span>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
-         </div>
-      </Link>
+          </div>
+        </Link>
+
+        <Link href="/admin/routines/new">
+          <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-admin-create">
+            <span className="font-medium text-lg text-foreground flex items-center gap-3">
+              <Plus className="h-5 w-5 text-primary" />
+              {t.adminRoutineCreate}
+            </span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }
