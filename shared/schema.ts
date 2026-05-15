@@ -142,3 +142,60 @@ export type CustomRoutineWithSteps = CustomRoutine & { steps: CustomRoutineStep[
 
 export type RoutineCategory = (typeof ROUTINE_CATEGORIES)[number];
 export type RewardGameType = (typeof REWARD_GAME_TYPES)[number];
+
+// =====================================================================
+// Game Scores (ご褒美ゲームのスコア記録)
+//   - 標準ルーティン完了後でも、追加ルーティン完了後でも記録できる
+//   - routineRecordId は紐付け可能ならセット (DB上の routine_records.id)
+//   - routineType は標準なら 'morning' 等、追加なら 'custom:<uuid>'
+// =====================================================================
+
+export const gameScores = pgTable("game_scores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userName: text("user_name").notNull(),
+  routineRecordId: varchar("routine_record_id"),
+  routineType: text("routine_type").notNull(),
+  gameType: text("game_type").notNull(),
+  score: integer("score").notNull(),
+  maxScore: integer("max_score").notNull(),
+  playedAt: timestamp("played_at").notNull().defaultNow(),
+});
+
+export const insertGameScoreSchema = z.object({
+  userName: z.string().trim().min(1).max(100),
+  routineRecordId: z.string().trim().min(1).nullable().optional(),
+  routineType: z.string().trim().min(1).max(100),
+  gameType: z.enum(REWARD_GAME_TYPES),
+  score: z.number().int().min(0),
+  maxScore: z.number().int().min(1),
+});
+
+export type InsertGameScore = z.infer<typeof insertGameScoreSchema>;
+export type GameScore = typeof gameScores.$inferSelect;
+
+// =====================================================================
+// Weekly summary (集計結果型 — テーブルではなく API レスポンス用)
+//   ユーザーごとの今週の取り組みを 1 オブジェクトに集約。
+// =====================================================================
+
+export type WeeklySummary = {
+  userName: string;
+  weekStartIso: string;
+  weekEndIso: string;
+  /** 完了したルーティン総数 */
+  totalCompletions: number;
+  /** ルーティン種別ごとの完了数 ('morning' / 'eyeExercise' / 'stretching' / 'custom:<uuid>') */
+  byRoutineType: Record<string, number>;
+  /** 直近 7 日の日別カウント (週開始から週末まで、それぞれ Date.toISOString().slice(0,10)) */
+  byDay: { date: string; count: number }[];
+  /** ゲームスコア集計 */
+  gameScores: {
+    playCount: number;
+    totalScore: number;
+    totalMaxScore: number;
+    /** 0〜1 の平均達成率。プレイ無しの場合 0 */
+    averageRatio: number;
+  };
+  /** 今日を含む連続実行日数 (今週内のみカウント) */
+  streakDays: number;
+};

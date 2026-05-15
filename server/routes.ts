@@ -7,36 +7,24 @@ import {
   insertRoutineRecordSchema,
   insertCustomRoutineSchema,
   updateCustomRoutineSchema,
+  insertGameScoreSchema,
 } from "@shared/schema";
+import { computeWeeklySummary } from "./summary";
 
 function send500(res: import("express").Response, where: string, error: unknown) {
   const err = error as any;
   console.error(`[routes] 500 at ${where}:`, err);
   if (err && err.stack) console.error(err.stack);
-
   const message =
     (err && (err.message || err.code || err.detail)) ||
     (typeof err === "string" ? err : "") ||
     "Internal Server Error";
-
-  return res.status(500).json({
-    message,
-    code: err?.code ?? null,
-    where,
-  });
+  return res.status(500).json({ message, code: err?.code ?? null, where });
 }
 
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
-
-  // ---------------- Diagnostic ----------------
-
+export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.get("/api/health", async (_req, res) => {
-    const facadeMode =
-      storage instanceof StorageFacade ? storage.getMode() : "db";
-
+    const facadeMode = storage instanceof StorageFacade ? storage.getMode() : "db";
     const result: any = {
       ok: true,
       storageMode: facadeMode,
@@ -46,7 +34,6 @@ export async function registerRoutes(
         : null,
       checks: {} as Record<string, any>,
     };
-
     try {
       const ping = await db.execute(sql`select 1 as one`);
       result.checks.ping = { ok: true, rows: ping.rows ?? ping };
@@ -54,30 +41,27 @@ export async function registerRoutes(
       result.ok = false;
       result.checks.ping = { ok: false, message: err.message, code: err.code };
     }
-
-    for (const tbl of ["routine_records", "custom_routines", "custom_routine_steps"] as const) {
+    for (const tbl of ["routine_records", "custom_routines", "custom_routine_steps", "game_scores"] as const) {
       try {
-        const r = await db.execute(
-          sql`select to_regclass(${"public." + tbl}) as exists`
-        );
-        result.checks[tbl] = {
-          ok: true,
-          exists: Boolean((r.rows ?? r)[0]?.exists),
-        };
+        const r = await db.execute(sql`select to_regclass(${"public." + tbl}) as exists`);
+        result.checks[tbl] = { ok: true, exists: Boolean((r.rows ?? r)[0]?.exists) };
       } catch (err: any) {
         result.ok = false;
         result.checks[tbl] = { ok: false, message: err.message };
       }
     }
-
     return res.status(200).json(result);
   });
 
-  // ---------------- routine_records ----------------
-
-  app.get("/api/routine-records", async (_req, res) => {
+  app.get("/api/routine-records", async (req, res) => {
     try {
-      const records = await storage.getRoutineRecords();
+      const userName =
+        typeof req.query.userName === "string" && req.query.userName.trim()
+          ? req.query.userName.trim()
+          : null;
+      const records = userName
+        ? await storage.getRoutineRecordsByUserName(userName)
+        : await storage.getRoutineRecords();
       return res.json(records);
     } catch (error) {
       return send500(res, "GET /api/routine-records", error);
@@ -88,9 +72,7 @@ export async function registerRoutes(
     try {
       const result = insertRoutineRecordSchema.safeParse(req.body);
       if (!result.success) {
-        return res
-          .status(400)
-          .json({ message: "Invalid request body", errors: result.error.flatten() });
+        return res.status(400).json({ message: "Invalid request body", errors: result.error.flatten() });
       }
       const record = await storage.createRoutineRecord(result.data);
       return res.status(201).json(record);
@@ -99,7 +81,14 @@ export async function registerRoutes(
     }
   });
 
-  // ---------------- custom routines ----------------
+  app.get("/api/users", async (_req, res) => {
+    try {
+      const users = await storage.listUserNames();
+      return res.json(users);
+    } catch (error) {
+      return send500(res, "GET /api/users", error);
+    }
+  });
 
   app.get("/api/custom-routines", async (req, res) => {
     try {
@@ -114,9 +103,7 @@ export async function registerRoutes(
   app.get("/api/custom-routines/:id", async (req, res) => {
     try {
       const routine = await storage.getCustomRoutineWithSteps(req.params.id);
-      if (!routine) {
-        return res.status(404).json({ message: "Custom routine not found" });
-      }
+      if (!routine) return res.status(404).json({ message: "Custom routine not found" });
       return res.json(routine);
     } catch (error) {
       return send500(res, `GET /api/custom-routines/${req.params.id}`, error);
@@ -127,9 +114,7 @@ export async function registerRoutes(
     try {
       const result = insertCustomRoutineSchema.safeParse(req.body);
       if (!result.success) {
-        return res
-          .status(400)
-          .json({ message: "Invalid request body", errors: result.error.flatten() });
+        return res.status(400).json({ message: "Invalid request body", errors: result.error.flatten() });
       }
       const routine = await storage.createCustomRoutine(result.data);
       return res.status(201).json(routine);
@@ -142,14 +127,10 @@ export async function registerRoutes(
     try {
       const result = updateCustomRoutineSchema.safeParse(req.body);
       if (!result.success) {
-        return res
-          .status(400)
-          .json({ message: "Invalid request body", errors: result.error.flatten() });
+        return res.status(400).json({ message: "Invalid request body", errors: result.error.flatten() });
       }
       const routine = await storage.updateCustomRoutine(req.params.id, result.data);
-      if (!routine) {
-        return res.status(404).json({ message: "Custom routine not found" });
-      }
+      if (!routine) return res.status(404).json({ message: "Custom routine not found" });
       return res.json(routine);
     } catch (error) {
       return send500(res, `PATCH /api/custom-routines/${req.params.id}`, error);
@@ -159,12 +140,54 @@ export async function registerRoutes(
   app.delete("/api/custom-routines/:id", async (req, res) => {
     try {
       const ok = await storage.deleteCustomRoutine(req.params.id);
-      if (!ok) {
-        return res.status(404).json({ message: "Custom routine not found" });
-      }
+      if (!ok) return res.status(404).json({ message: "Custom routine not found" });
       return res.status(204).send();
     } catch (error) {
       return send500(res, `DELETE /api/custom-routines/${req.params.id}`, error);
+    }
+  });
+
+  app.get("/api/game-scores", async (req, res) => {
+    try {
+      const userName =
+        typeof req.query.userName === "string" && req.query.userName.trim()
+          ? req.query.userName.trim()
+          : undefined;
+      const limitRaw = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : NaN;
+      const limit = Number.isFinite(limitRaw) ? limitRaw : undefined;
+      const rows = await storage.listGameScores({ userName, limit });
+      return res.json(rows);
+    } catch (error) {
+      return send500(res, "GET /api/game-scores", error);
+    }
+  });
+
+  app.post("/api/game-scores", async (req, res) => {
+    try {
+      const result = insertGameScoreSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid request body", errors: result.error.flatten() });
+      }
+      const row = await storage.createGameScore(result.data);
+      return res.status(201).json(row);
+    } catch (error) {
+      return send500(res, "POST /api/game-scores", error);
+    }
+  });
+
+  app.get("/api/summary/weekly", async (req, res) => {
+    try {
+      const userName = typeof req.query.userName === "string" ? req.query.userName.trim() : "";
+      if (!userName) return res.status(400).json({ message: "userName is required" });
+      const refRaw = typeof req.query.reference === "string" ? req.query.reference : null;
+      const reference = refRaw ? new Date(refRaw) : new Date();
+      if (Number.isNaN(reference.getTime())) {
+        return res.status(400).json({ message: "Invalid reference date" });
+      }
+      const summary = await computeWeeklySummary(userName, reference);
+      return res.json(summary);
+    } catch (error) {
+      return send500(res, "GET /api/summary/weekly", error);
     }
   });
 

@@ -14,6 +14,8 @@ import Settings from "@/pages/settings";
 import History from "@/pages/history";
 import AdminRoutines from "@/pages/admin/routines";
 import AdminRoutineForm from "@/pages/admin/routine-form";
+import AdminUsers from "@/pages/admin/users";
+import AdminUserDetail from "@/pages/admin/user-detail";
 
 function Router() {
   return (
@@ -26,6 +28,8 @@ function Router() {
         <Route path="/admin/routines" component={AdminRoutines} />
         <Route path="/admin/routines/new" component={AdminRoutineForm} />
         <Route path="/admin/routines/:id" component={AdminRoutineForm} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/users/:userName" component={AdminUserDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -42,7 +46,6 @@ function App() {
     closeOnboarding,
   } = useStore();
 
-  // 初回のみ自動表示。一度閉じたら再度自動では開かない (設定画面・ホームのボタンから手動再表示は可)
   useEffect(() => {
     if (!hasSeenOnboarding) {
       openOnboarding();

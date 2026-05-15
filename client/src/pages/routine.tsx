@@ -265,7 +265,8 @@ const FeedbackStep = ({
   onShowMiniGame,
   routineRecordType,
 }: {
-  onShowMiniGame: () => void;
+  /** ご褒美ゲーム起動。createRoutineRecord の結果 id を渡す (失敗時は null) */
+  onShowMiniGame: (recordId: string | null) => void;
   /** routine_records.routineType に書き込む値。標準なら 'morning' 等、追加なら 'custom:<id>' */
   routineRecordType: string;
 }) => {
@@ -281,16 +282,23 @@ const FeedbackStep = ({
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (hasPressedFinish) return;
     setHasPressedFinish(true);
     const submittedFeeling = feeling || "good";
-    createRecordMutation.mutate({
-      userName,
-      feeling: submittedFeeling,
-      routineType: routineRecordType,
-    });
-    onShowMiniGame();
+    // ゲーム開始前に record の生成を待つ。失敗してもゲームには進めるよう null を渡す。
+    let recordId: string | null = null;
+    try {
+      const created = await createRecordMutation.mutateAsync({
+        userName,
+        feeling: submittedFeeling,
+        routineType: routineRecordType,
+      });
+      recordId = created?.id ?? null;
+    } catch (err) {
+      console.warn("[routine] createRoutineRecord failed:", err);
+    }
+    onShowMiniGame(recordId);
   };
 
   const feelings = [
@@ -354,6 +362,7 @@ export default function Routine() {
   const {
     t,
     language,
+    userName,
     currentStepIndex,
     nextStep,
     prevStep,
@@ -363,6 +372,7 @@ export default function Routine() {
   } = useStore();
   const [, setLocation] = useLocation();
   const [showMiniGame, setShowMiniGame] = useState(false);
+  const [lastRecordId, setLastRecordId] = useState<string | null>(null);
 
   const isCustom = !!activeCustomRoutineId;
   const customQuery = useCustomRoutine(activeCustomRoutineId);
@@ -404,9 +414,21 @@ export default function Routine() {
   const routineRecordType = isCustom ? `custom:${activeCustomRoutineId}` : routineType;
 
   // ご褒美ゲームに渡す routineType (追加の場合は ご褒美ゲーム種別 から逆引き)
+  const customRewardGameType: RewardGameType = isCustom
+    ? ((customRoutine?.rewardGameType as RewardGameType) ?? "star")
+    : "star";
   const miniGameRoutineType: RoutineType = isCustom
-    ? rewardGameToRoutineType(customRoutine?.rewardGameType as RewardGameType ?? "star")
+    ? rewardGameToRoutineType(customRewardGameType)
     : routineType;
+
+  // game_scores.gameType に書き込む値 (標準は routineType から逆引き)
+  const miniGameType: RewardGameType = isCustom
+    ? customRewardGameType
+    : routineType === "morning"
+    ? "star"
+    : routineType === "eyeExercise"
+    ? "balloon"
+    : "chest";
 
   const handleHome = () => {
     if (confirm(t.exitConfirmMessage)) {
@@ -415,12 +437,14 @@ export default function Routine() {
     }
   };
 
-  const handleShowMiniGame = () => {
+  const handleShowMiniGame = (recordId: string | null) => {
+    setLastRecordId(recordId);
     setShowMiniGame(true);
   };
 
   const handleCloseMiniGame = () => {
     setShowMiniGame(false);
+    setLastRecordId(null);
     exitRoutine();
     setLocation("/");
   };
@@ -459,6 +483,12 @@ export default function Routine() {
           routineType={miniGameRoutineType}
           onClose={handleCloseMiniGame}
           language={language}
+          scoreContext={{
+            userName,
+            recordRoutineType: routineRecordType,
+            routineRecordId: lastRecordId,
+            gameType: miniGameType,
+          }}
         />
       )}
 

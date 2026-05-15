@@ -29,7 +29,7 @@ export default function History() {
 
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['routine-records'],
-    queryFn: getRoutineRecords,
+    queryFn: () => getRoutineRecords(),
   });
 
   const getDateLocale = () => {

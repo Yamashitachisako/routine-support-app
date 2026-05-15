@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useStore } from "@/lib/store";
-import { Settings, ArrowLeft } from "lucide-react";
+import { Settings, ArrowLeft, Cog } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   const isHome = location === "/";
+  const isAdmin = location.startsWith("/admin");
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans overflow-hidden relative">
@@ -31,11 +32,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {!isRoutineActive && (
-          <Link href="/settings">
-            <Button variant="ghost" size="icon" className="h-12 w-12" data-testid="button-settings">
-              <Settings className="h-6 w-6 text-muted-foreground" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {!isAdmin && (
+              <Link href="/admin/routines">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1.5 rounded-full bg-white/70 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 px-2.5 sm:px-3.5"
+                  data-testid="button-admin-mode"
+                  aria-label={t.adminTitle}
+                  title={t.adminTitle}
+                >
+                  <Cog className="h-4 w-4 sm:h-[18px] sm:w-[18px]" aria-hidden />
+                  <span className="hidden sm:inline text-sm font-medium">
+                    {t.adminShort}
+                  </span>
+                </Button>
+              </Link>
+            )}
+            <Link href="/settings">
+              <Button variant="ghost" size="icon" className="h-12 w-12" data-testid="button-settings">
+                <Settings className="h-6 w-6 text-muted-foreground" />
+              </Button>
+            </Link>
+          </div>
         )}
       </header>
 

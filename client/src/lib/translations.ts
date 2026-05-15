@@ -102,6 +102,7 @@ export interface Translation {
   goToAdmin: string;
 
   adminTitle: string;
+  adminShort: string;
   adminBackToApp: string;
   adminRoutinesTitle: string;
   adminRoutineCreate: string;
@@ -143,6 +144,21 @@ export interface Translation {
   adminEmptyState: string;
   adminTitleRequired: string;
   adminAtLeastOneStep: string;
+
+  // Phase 2: users / weekly summary
+  usersTitle: string;
+  usersEmptyState: string;
+  goToUsers: string;
+  userDetailTitle: string;
+  weeklyTotalCompletions: string;
+  weeklyByRoutine: string;
+  weeklyByDay: string;
+  weeklyGameAverage: string;
+  weeklyGamePlays: string;
+  weeklyStreak: string;
+  weeklyStreakDays: string;
+  recentHistoryTitle: string;
+  backToUsers: string;
 }
 
 const ja: Translation = {
@@ -237,6 +253,7 @@ const ja: Translation = {
     goToAdmin: '管理画面へ',
 
     adminTitle: '管理者画面',
+    adminShort: '管理',
     adminBackToApp: 'アプリへ戻る',
     adminRoutinesTitle: '追加ルーティン管理',
     adminRoutineCreate: '新しいルーティンを追加',
@@ -278,6 +295,20 @@ const ja: Translation = {
     adminEmptyState: 'まだ追加ルーティンはありません。「新しいルーティンを追加」から作成してください。',
     adminTitleRequired: 'ルーティン名を入力してください（少なくとも1言語）',
     adminAtLeastOneStep: 'ステップを1つ以上追加してください',
+
+    usersTitle: '利用者別の進捗',
+    usersEmptyState: 'まだ記録のある利用者はいません',
+    goToUsers: '利用者一覧',
+    userDetailTitle: '利用者の進捗',
+    weeklyTotalCompletions: '今週の完了回数',
+    weeklyByRoutine: 'ルーティン別',
+    weeklyByDay: '日別の取り組み',
+    weeklyGameAverage: 'ゲーム達成率',
+    weeklyGamePlays: 'ゲームプレイ回数',
+    weeklyStreak: '連続日数',
+    weeklyStreakDays: '日',
+    recentHistoryTitle: '直近の履歴',
+    backToUsers: '利用者一覧に戻る',
 
     morningIntroSteps: {
       intro1: { title: '白い布', description: '白い布を用意してください' },
@@ -422,6 +453,7 @@ const en: Translation = {
     goToAdmin: 'Go to admin',
 
     adminTitle: 'Admin',
+    adminShort: 'Admin',
     adminBackToApp: 'Back to app',
     adminRoutinesTitle: 'Added routines',
     adminRoutineCreate: 'Add a new routine',
@@ -463,6 +495,20 @@ const en: Translation = {
     adminEmptyState: 'No added routines yet. Tap "Add a new routine" to create one.',
     adminTitleRequired: 'Please enter a routine title (at least one language)',
     adminAtLeastOneStep: 'Please add at least one step',
+
+    usersTitle: 'User progress',
+    usersEmptyState: 'No users with records yet',
+    goToUsers: 'Users',
+    userDetailTitle: 'User progress',
+    weeklyTotalCompletions: "This week's completions",
+    weeklyByRoutine: 'By routine',
+    weeklyByDay: 'By day',
+    weeklyGameAverage: 'Game average',
+    weeklyGamePlays: 'Games played',
+    weeklyStreak: 'Streak',
+    weeklyStreakDays: 'days',
+    recentHistoryTitle: 'Recent history',
+    backToUsers: 'Back to users',
 
     morningIntroSteps: {
       intro1: { title: 'White Cloth', description: 'Prepare the white cloth' },
@@ -597,6 +643,7 @@ const zh: Translation = {
   goToAdmin: '前往管理',
 
   adminTitle: '管理后台',
+  adminShort: '管理',
   adminBackToApp: '返回应用',
   adminRoutinesTitle: '新增训练管理',
   adminRoutineCreate: '新增一个训练',
@@ -638,6 +685,20 @@ const zh: Translation = {
   adminEmptyState: '还没有新增训练。点击"新增一个训练"开始创建。',
   adminTitleRequired: '请输入训练名称（至少一种语言）',
   adminAtLeastOneStep: '请至少添加一个步骤',
+
+  usersTitle: '用户进度',
+  usersEmptyState: '还没有记录的用户',
+  goToUsers: '用户列表',
+  userDetailTitle: '用户进度',
+  weeklyTotalCompletions: '本周完成次数',
+  weeklyByRoutine: '按训练分类',
+  weeklyByDay: '每日记录',
+  weeklyGameAverage: '游戏平均',
+  weeklyGamePlays: '游戏次数',
+  weeklyStreak: '连续天数',
+  weeklyStreakDays: '天',
+  recentHistoryTitle: '最近的记录',
+  backToUsers: '返回用户列表',
 
   morningIntroSteps: {
     intro1: { title: '白布', description: '请准备白布' },

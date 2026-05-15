@@ -11,8 +11,6 @@ import {
   Activity,
   BookOpen,
   Star,
-  Settings as SettingsIcon,
-  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +20,9 @@ import { getRoutineRecords } from "@/lib/api";
 import type { RoutineType } from "@/lib/store";
 import { buildWeeklySummaryV1 } from "@/lib/weeklySummary";
 import { useVisibleCustomRoutines, pickI18nText } from "@/hooks/useCustomRoutines";
+import { getCategoryStyle } from "@/lib/category-styles";
+import { CategoryBadge } from "@/components/category-badge";
+import { getIconByKey } from "@/lib/icon-options";
 
 function formatWeeklyAchievements(template: string, count: number): string {
   return template.replace(/\{count\}/g, String(count));
@@ -46,7 +47,7 @@ export default function Home() {
 
   const { data: history = [] } = useQuery({
     queryKey: ['routine-records'],
-    queryFn: getRoutineRecords,
+    queryFn: () => getRoutineRecords(),
   });
 
   const customRoutinesQuery = useVisibleCustomRoutines();
@@ -147,19 +148,20 @@ export default function Home() {
                 {customRoutines.map((routine) => {
                   const selected = activeCustomRoutineId === routine.id;
                   const label = pickI18nText(routine.titleI18n, language);
+                  const catStyle = getCategoryStyle(routine.category);
+                  const RoutineIcon = getIconByKey(routine.iconKey);
                   return (
                     <button
                       key={routine.id}
                       onClick={() => handleSelectCustom(routine.id)}
                       className={`flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-xl transition-all font-medium text-base ${
-                        selected
-                          ? 'bg-primary text-white shadow-lg scale-105'
-                          : 'bg-white/60 text-foreground hover:bg-white/80 border border-white/60'
+                        selected ? catStyle.buttonActive : catStyle.buttonIdle
                       }`}
                       data-testid={`button-custom-routine-${routine.id}`}
                     >
-                      <Sparkles className="h-6 w-6" />
+                      <RoutineIcon className="h-6 w-6" />
                       <span className="text-sm leading-tight">{label || routine.id.slice(0, 8)}</span>
+                      <CategoryBadge category={routine.category} />
                     </button>
                   );
                 })}
@@ -256,37 +258,15 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-2">
-        <Link href="/history">
-           <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
-              <span className="font-medium text-lg text-foreground flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-primary" />
-                {t.history}
-              </span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-           </div>
-        </Link>
-
-        <Link href="/admin/routines">
-          <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-admin-routines">
+      <Link href="/history">
+         <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-history-row">
             <span className="font-medium text-lg text-foreground flex items-center gap-3">
-              <SettingsIcon className="h-5 w-5 text-primary" />
-              {t.manageRoutines}
+              <Calendar className="h-5 w-5 text-primary" />
+              {t.history}
             </span>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Link>
-
-        <Link href="/admin/routines/new">
-          <div className="flex items-center justify-between p-5 rounded-xl bg-white/40 hover:bg-white/60 transition-colors cursor-pointer" data-testid="link-admin-create">
-            <span className="font-medium text-lg text-foreground flex items-center gap-3">
-              <Plus className="h-5 w-5 text-primary" />
-              {t.adminRoutineCreate}
-            </span>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Link>
-      </div>
+         </div>
+      </Link>
     </div>
   );
 }

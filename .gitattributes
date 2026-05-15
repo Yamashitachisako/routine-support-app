@@ -1,0 +1,12 @@
+# 改行コードは LF に正規化 (異なる OS で作業しても差分が発生しないようにする)
+* text=auto eol=lf
+
+# バイナリは扱わない
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.pptx binary
+*.xlsx binary

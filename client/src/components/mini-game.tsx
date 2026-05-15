@@ -1,10 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home } from "lucide-react";
 import { translations, type Language, type Translation } from "@/lib/translations";
 import type { RoutineType } from "@/lib/store";
+import { createGameScore } from "@/lib/api";
+import type { RewardGameType } from "@shared/schema";
 
 const REWARD_IDS = ["star", "balloon", "fruit", "fish", "present"] as const;
 type RewardId = (typeof REWARD_IDS)[number];
@@ -158,10 +160,19 @@ function GameShell({
   );
 }
 
-function MorningStarGame({ t, onClose }: { t: Translation; onClose: () => void }) {
+function MorningStarGame({
+  t,
+  onClose,
+  onScore,
+}: {
+  t: Translation;
+  onClose: () => void;
+  onScore?: (score: number, maxScore: number) => void;
+}) {
   const [phase, setPhase] = useState<"guide" | "play" | "success">("guide");
   const [tapped, setTapped] = useState<Set<number>>(() => new Set());
   const [burst, setBurst] = useState(false);
+  const reportedRef = useRef(false);
 
   const tapStar = useCallback((id: number) => {
     setTapped((prev) => {
@@ -178,6 +189,13 @@ function MorningStarGame({ t, onClose }: { t: Translation; onClose: () => void }
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    if (phase === "success" && !reportedRef.current) {
+      reportedRef.current = true;
+      onScore?.(tapped.size, STAR_COUNT);
+    }
+  }, [phase, tapped.size, onScore]);
 
   const collected = tapped.size;
   const gradient = "from-sky-600 via-indigo-800 to-violet-950";
@@ -253,10 +271,26 @@ function MorningStarGame({ t, onClose }: { t: Translation; onClose: () => void }
   );
 }
 
-function EyeBalloonGame({ t, onClose }: { t: Translation; onClose: () => void }) {
+function EyeBalloonGame({
+  t,
+  onClose,
+  onScore,
+}: {
+  t: Translation;
+  onClose: () => void;
+  onScore?: (score: number, maxScore: number) => void;
+}) {
   const [phase, setPhase] = useState<"guide" | "play" | "success">("guide");
   const [popped, setPopped] = useState<Set<number>>(() => new Set());
   const [burst, setBurst] = useState(false);
+  const reportedRef = useRef(false);
+
+  useEffect(() => {
+    if (phase === "success" && !reportedRef.current) {
+      reportedRef.current = true;
+      onScore?.(popped.size, BALLOON_POP_GOAL);
+    }
+  }, [phase, popped.size, onScore]);
 
   const pop = useCallback(
     (id: number) => {
@@ -350,10 +384,27 @@ function EyeBalloonGame({ t, onClose }: { t: Translation; onClose: () => void })
   );
 }
 
-function StretchChestGame({ t, onClose }: { t: Translation; onClose: () => void }) {
+function StretchChestGame({
+  t,
+  onClose,
+  onScore,
+}: {
+  t: Translation;
+  onClose: () => void;
+  onScore?: (score: number, maxScore: number) => void;
+}) {
   const [phase, setPhase] = useState<"guide" | "pick" | "reward">("guide");
   const [rewardId, setRewardId] = useState<RewardId | null>(null);
   const [showBurst, setShowBurst] = useState(false);
+  const reportedRef = useRef(false);
+
+  useEffect(() => {
+    if (phase === "reward" && !reportedRef.current) {
+      reportedRef.current = true;
+      // 宝箱を開けたら成功固定 (1/1)
+      onScore?.(1, 1);
+    }
+  }, [phase, onScore]);
 
   const handleChestTap = useCallback(
     (_idx: number) => {
@@ -490,17 +541,51 @@ interface MiniGameProps {
   routineType: RoutineType;
   onClose: () => void;
   language: Language;
+  /** ゲームスコア記録用。指定しなければ送信しない (後方互換) */
+  scoreContext?: {
+    userName: string;
+    /** routine_records.routineType に書き込んだ値 ('morning' / 'custom:<id>' 等) */
+    recordRoutineType: string;
+    /** routine_records.id (フォールバックでは null になる場合がある) */
+    routineRecordId?: string | null;
+    gameType: RewardGameType;
+  };
 }
 
-export default function MiniGame({ routineType, onClose, language }: MiniGameProps) {
+export default function MiniGame({
+  routineType,
+  onClose,
+  language,
+  scoreContext,
+}: MiniGameProps) {
   const lang = resolveLang(language);
   const t = translations[lang];
 
+  // fire-and-forget でスコアをサーバに送る。失敗してもユーザー体験は壊さない。
+  const handleScore = useCallback(
+    (score: number, maxScore: number) => {
+      if (!scoreContext) return;
+      const userName = scoreContext.userName.trim();
+      if (!userName) return;
+      createGameScore({
+        userName,
+        routineRecordId: scoreContext.routineRecordId ?? null,
+        routineType: scoreContext.recordRoutineType,
+        gameType: scoreContext.gameType,
+        score,
+        maxScore,
+      }).catch((err) => {
+        console.warn("[mini-game] failed to record score:", err);
+      });
+    },
+    [scoreContext]
+  );
+
   if (routineType === "morning") {
-    return <MorningStarGame t={t} onClose={onClose} />;
+    return <MorningStarGame t={t} onClose={onClose} onScore={handleScore} />;
   }
   if (routineType === "eyeExercise") {
-    return <EyeBalloonGame t={t} onClose={onClose} />;
+    return <EyeBalloonGame t={t} onClose={onClose} onScore={handleScore} />;
   }
-  return <StretchChestGame t={t} onClose={onClose} />;
+  return <StretchChestGame t={t} onClose={onClose} onScore={handleScore} />;
 }
