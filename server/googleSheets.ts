@@ -188,6 +188,8 @@ export async function appendRoutineLog(input: {
 
   try {
     const sheets = google.sheets({ version: "v4", auth });
+    console.log("spreadsheetId =", sheetId);
+    console.log("range =", ROUTINE_LOGS_APPEND_RANGE);
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: ROUTINE_LOGS_APPEND_RANGE,
