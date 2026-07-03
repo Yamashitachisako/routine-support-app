@@ -190,6 +190,23 @@ export async function appendRoutineLog(input: {
     const sheets = google.sheets({ version: "v4", auth });
     console.log("spreadsheetId =", sheetId);
     console.log("range =", ROUTINE_LOGS_APPEND_RANGE);
+    try {
+      const spreadsheet = await sheets.spreadsheets.get({
+        spreadsheetId: sheetId,
+        fields: "properties.title,sheets.properties.title",
+      });
+      console.log("[googleSheets] spreadsheets.get success:", {
+        spreadsheetTitle: spreadsheet.data.properties?.title ?? null,
+        sheetTitles:
+          spreadsheet.data.sheets?.map((sheet) => sheet.properties?.title ?? null) ?? [],
+      });
+    } catch (error) {
+      console.error(
+        "[googleSheets] GET FULL ERROR",
+        JSON.stringify(error, null, 2),
+      );
+      throw error;
+    }
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: ROUTINE_LOGS_APPEND_RANGE,
