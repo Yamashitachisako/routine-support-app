@@ -37,39 +37,110 @@ export function getGoogleSheetsId(): string | null {
 }
 
 export function normalizeGooglePrivateKey(raw: string): string {
-  let key = raw.trim();
+  const resolved = resolveGooglePrivateKey(raw);
+  return resolved?.key ?? "";
+}
 
-  // Render / .env で余分に付く引用符を除去
-  while (
-    (key.startsWith('"') && key.endsWith('"')) ||
-    (key.startsWith("'") && key.endsWith("'"))
-  ) {
-    key = key.slice(1, -1).trim();
+function stripOuterQuotes(value: string): string {
+  let result = value.replace(/^\uFEFF/, "").trim();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    if (
+      (result.startsWith('"') && result.endsWith('"')) ||
+      (result.startsWith("'") && result.endsWith("'"))
+    ) {
+      result = result.slice(1, -1).trim();
+      changed = true;
+    }
   }
+  return result;
+}
 
-  // 環境変数の改行エスケープを復元（\\n, \n, 実改行すべてに対応）
-  key = key.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n");
-  key = key.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+function tryParseJsonQuotedString(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('"')) return null;
+  try {
+    const parsed = JSON.parse(trimmed);
+    return typeof parsed === "string" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
-  // 1行に潰れた PEM を改行付きに再構成
-  if (key.includes("-----BEGIN") && !key.includes("\n")) {
-    key = key
+function unescapeNewlines(value: string): string {
+  let result = value;
+  for (let i = 0; i < 5; i++) {
+    const next = result
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\n");
+    if (next === result) break;
+    result = next;
+  }
+  return result.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+
+function formatPemBody(key: string): string {
+  let normalized = key.trim();
+
+  if (normalized.includes("-----BEGIN") && !normalized.includes("\n")) {
+    normalized = normalized
       .replace(/-----BEGIN ([A-Z ]+)-----/g, "-----BEGIN $1-----\n")
       .replace(/-----END ([A-Z ]+)-----/g, "\n-----END $1-----\n");
   }
 
-  // PEM 本文の空白を除去して標準的な64文字折り返しに整形
-  const pemMatch = key.match(/-----BEGIN ([A-Z ]+)-----([\s\S]*?)-----END ([A-Z ]+)-----/);
-  if (pemMatch) {
-    const [, beginLabel, body, endLabel] = pemMatch;
-    const cleanedBody = body.replace(/\s+/g, "");
-    const wrappedBody = cleanedBody.match(/.{1,64}/g)?.join("\n") ?? cleanedBody;
-    key = `-----BEGIN ${beginLabel}-----\n${wrappedBody}\n-----END ${endLabel}-----\n`;
-  } else if (!key.endsWith("\n")) {
-    key += "\n";
+  const pemMatch = normalized.match(/-----BEGIN ([A-Z ]+)-----([\s\S]*?)-----END ([A-Z ]+)-----/);
+  if (!pemMatch) {
+    return normalized.endsWith("\n") ? normalized : `${normalized}\n`;
   }
 
-  return key;
+  const [, beginLabel, body, endLabel] = pemMatch;
+  const cleanedBody = body.replace(/[^A-Za-z0-9+/=]/g, "");
+  const wrappedBody = cleanedBody.match(/.{1,64}/g)?.join("\n") ?? cleanedBody;
+  return `-----BEGIN ${beginLabel}-----\n${wrappedBody}\n-----END ${endLabel}-----\n`;
+}
+
+function wrapBase64AsPrivateKey(base64: string): string {
+  const cleaned = base64.replace(/[^A-Za-z0-9+/=]/g, "");
+  const wrapped = cleaned.match(/.{1,64}/g)?.join("\n") ?? cleaned;
+  return `-----BEGIN PRIVATE KEY-----\n${wrapped}\n-----END PRIVATE KEY-----\n`;
+}
+
+/** Render / .env 向けに複数パターンで private_key を解釈する */
+export function resolveGooglePrivateKey(
+  raw: string,
+): { key: string; strategy: string } | null {
+  const stripped = stripOuterQuotes(raw);
+  const jsonParsed = tryParseJsonQuotedString(stripped);
+
+  const candidates: Array<{ strategy: string; value: string }> = [
+    { strategy: "json-quoted-string", value: jsonParsed ?? "" },
+    { strategy: "json-quoted-string+unescape", value: jsonParsed ? unescapeNewlines(jsonParsed) : "" },
+    { strategy: "strip-quotes", value: stripped },
+    { strategy: "strip-quotes+unescape", value: unescapeNewlines(stripped) },
+    { strategy: "strip-quotes+format-pem", value: formatPemBody(unescapeNewlines(stripped)) },
+    {
+      strategy: "collapsed-single-line+format-pem",
+      value: formatPemBody(unescapeNewlines(stripped).replace(/\n/g, "")),
+    },
+    {
+      strategy: "base64-only",
+      value: stripped.includes("-----BEGIN") ? "" : wrapBase64AsPrivateKey(stripped),
+    },
+  ];
+
+  for (const candidate of candidates) {
+    const value = candidate.value.trim();
+    if (!value || !value.includes("BEGIN")) continue;
+
+    const formatted = formatPemBody(value);
+    if (isValidGooglePrivateKey(formatted)) {
+      return { key: formatted, strategy: candidate.strategy };
+    }
+  }
+
+  return null;
 }
 
 export function isValidGooglePrivateKey(privateKey: string): boolean {
@@ -86,25 +157,24 @@ function readEnvServiceAccount(): ServiceAccountJson | null {
   const rawPrivateKey = process.env.GOOGLE_PRIVATE_KEY;
   if (!client_email || !rawPrivateKey?.trim()) return null;
 
-  const private_key = normalizeGooglePrivateKey(rawPrivateKey);
-  if (!private_key.includes("BEGIN PRIVATE KEY") && !private_key.includes("BEGIN RSA PRIVATE KEY")) {
-    console.warn("[googleCredentials] GOOGLE_PRIVATE_KEY is missing PEM headers");
-    return null;
-  }
-
-  if (!isValidGooglePrivateKey(private_key)) {
-    console.warn("[googleCredentials] GOOGLE_PRIVATE_KEY failed OpenSSL validation after normalization", {
-      length: private_key.length,
-      hasNewlines: private_key.includes("\n"),
-      lineCount: private_key.split("\n").length,
+  const resolved = resolveGooglePrivateKey(rawPrivateKey);
+  if (!resolved) {
+    console.warn("[googleCredentials] GOOGLE_PRIVATE_KEY could not be parsed", {
+      length: rawPrivateKey.length,
+      hasLiteralBackslashN: rawPrivateKey.includes("\\n"),
+      hasNewlines: rawPrivateKey.includes("\n"),
+      startsWithQuote: rawPrivateKey.trim().startsWith('"'),
+      hasBeginMarker: rawPrivateKey.includes("BEGIN"),
     });
     return null;
   }
 
+  console.log("[googleCredentials] GOOGLE_PRIVATE_KEY resolved via:", resolved.strategy);
+
   return {
     type: "service_account",
     client_email,
-    private_key,
+    private_key: resolved.key,
   };
 }
 
