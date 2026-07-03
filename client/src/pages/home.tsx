@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -35,8 +36,6 @@ export default function Home() {
     t,
     language,
     startRoutine,
-    userName,
-    setUserName,
     routineType,
     setRoutineType,
     activeCustomRoutineId,
@@ -44,6 +43,7 @@ export default function Home() {
     openOnboarding,
   } = useStore();
   const [, setLocation] = useLocation();
+  const [nameInput, setNameInput] = useState("");
 
   const { data: history = [] } = useQuery({
     queryKey: ['routine-records'],
@@ -54,8 +54,9 @@ export default function Home() {
   const customRoutines = customRoutinesQuery.data ?? [];
 
   const handleStart = () => {
-    if (!userName.trim()) return;
-    startRoutine();
+    const name = nameInput.trim();
+    if (!name) return;
+    startRoutine(name);
     setLocation("/routine");
   };
 
@@ -175,8 +176,8 @@ export default function Home() {
               <User className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
               <Input
                 id="username"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
                 placeholder={t.namePlaceholder}
                 className="pl-12 h-14 text-lg rounded-xl bg-white/60 border-white focus:bg-white transition-all"
                 data-testid="input-username"
@@ -186,7 +187,7 @@ export default function Home() {
 
           <Button
             onClick={handleStart}
-            disabled={!userName.trim()}
+            disabled={!nameInput.trim()}
             size="lg"
             className="rounded-full w-full h-16 text-xl font-medium shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
             data-testid="button-start-routine"

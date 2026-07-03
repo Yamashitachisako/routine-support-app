@@ -8,8 +8,17 @@ import {
   insertCustomRoutineSchema,
   updateCustomRoutineSchema,
   insertGameScoreSchema,
+  insertRoutineLogSchema,
 } from "@shared/schema";
 import { computeWeeklySummary } from "./summary";
+import { appendRoutineLog, fetchRoutineTasks } from "./googleSheets";
+import {
+  SHEET_RANGE,
+  createGoogleSheetsAuth,
+  getGoogleSheetsId,
+  readServiceAccountJson,
+  formatTokyoTimestamp,
+} from "./googleCredentials";
 
 function send500(res: import("express").Response, where: string, error: unknown) {
   const err = error as any;
@@ -51,6 +60,74 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
     }
     return res.status(200).json(result);
+  });
+
+  app.get("/api/routine-tasks", async (_req, res) => {
+    try {
+      const range = SHEET_RANGE;
+      const auth = createGoogleSheetsAuth();
+      const serviceAccount = readServiceAccountJson();
+      const spreadsheetId = getGoogleSheetsId();
+      let clientEmail = serviceAccount?.client_email ?? null;
+      if (auth) {
+        const client = await auth.getClient();
+        clientEmail = (client as { email?: string }).email ?? clientEmail;
+      }
+
+      console.log("Spreadsheet ID:", process.env.GOOGLE_SHEETS_ID);
+      console.log("Range:", range);
+      console.log("Client Email:", clientEmail);
+      console.log("spreadsheetId (Google Sheets API):", spreadsheetId);
+
+      const { tasks, source, error, apiErrorDetail } = await fetchRoutineTasks();
+      res.setHeader("X-Routine-Tasks-Source", source);
+      res.setHeader("X-Routine-Tasks-Range", "routine_tasks!A3:H");
+      if (error) res.setHeader("X-Routine-Tasks-Error", error);
+      if (apiErrorDetail) {
+        res.setHeader(
+          "X-Routine-Tasks-Error-Detail",
+          apiErrorDetail.replace(/\r?\n/g, "").slice(0, 2000),
+        );
+      }
+      return res.json(tasks);
+    } catch (error) {
+      console.error("[routes] GET /api/routine-tasks unexpected error:", error);
+      const { FALLBACK_ROUTINE_TASKS } = await import("@shared/routineTasks");
+      res.setHeader("X-Routine-Tasks-Source", "fallback");
+      return res.json(FALLBACK_ROUTINE_TASKS);
+    }
+  });
+
+  app.post("/api/routine-logs", async (req, res) => {
+    try {
+      const result = insertRoutineLogSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Invalid request body",
+          errors: result.error.flatten(),
+        });
+      }
+
+      const body = result.data;
+      const sheetRow = {
+        timestamp: formatTokyoTimestamp(),
+        user_name: body.userName,
+        step: body.step,
+        task_title: body.taskTitle,
+        completed: body.completed,
+        duration_seconds: body.durationSeconds,
+      };
+      console.log("[routine-logs] append request:", sheetRow);
+
+      const appendResult = await appendRoutineLog(body);
+      if (!appendResult.ok) {
+        return res.status(502).json({ message: appendResult.error });
+      }
+
+      return res.status(201).json({ ok: true });
+    } catch (error) {
+      return send500(res, "POST /api/routine-logs", error);
+    }
   });
 
   app.get("/api/routine-records", async (req, res) => {

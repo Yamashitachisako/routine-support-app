@@ -7,7 +7,37 @@ import type {
   GameScore,
   InsertGameScore,
   WeeklySummary,
+  RoutineTask,
+  InsertRoutineLog,
 } from "@shared/schema";
+import { FALLBACK_ROUTINE_TASKS } from "@shared/routineTasks";
+
+// ---------- Routine tasks (Google Sheets) ----------
+
+export async function getRoutineTasks(): Promise<RoutineTask[]> {
+  try {
+    const response = await fetch("/api/routine-tasks");
+    if (!response.ok) throw new Error("Failed to fetch routine tasks");
+    return response.json();
+  } catch (error) {
+    console.warn("[api] getRoutineTasks failed, using fallback:", error);
+    return FALLBACK_ROUTINE_TASKS;
+  }
+}
+
+// ---------- Routine logs (Google Sheets) ----------
+
+export async function appendRoutineLog(log: InsertRoutineLog): Promise<void> {
+  const response = await fetch("/api/routine-logs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(log),
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw new Error(`Failed to append routine log: ${text}`);
+  }
+}
 
 // ---------- Routine records ----------
 

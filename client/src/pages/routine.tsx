@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getRoutineSessionUserName } from "@/lib/routineSessionUser";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,26 +14,52 @@ import {
   Frown,
   Star,
   Home,
+  Pause,
+  Play,
 } from "lucide-react";
-import { createRoutineRecord } from "@/lib/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { appendRoutineLog, createRoutineRecord, getRoutineTasks } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import MiniGame from "@/components/mini-game";
 import { useCustomRoutine, pickI18nText } from "@/hooks/useCustomRoutines";
-import type { CustomRoutineWithSteps, RewardGameType } from "@shared/schema";
+import type { CustomRoutineWithSteps, RewardGameType, RoutineTask } from "@shared/schema";
 import type { RoutineType } from "@/lib/store";
-import type { Translation } from "@/lib/translations";
-
-const STEP_COUNTS: Record<RoutineType, number> = {
-  morning: 9,
-  eyeExercise: 9,
-  stretching: 16,
-};
+import type { Language, Translation } from "@/lib/translations";
 
 const INTRO_COUNTS: Record<RoutineType, number> = {
   morning: 0,
   eyeExercise: 0,
   stretching: 0,
 };
+
+function getYoutubeEmbedUrl(url: string): string | null {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.hostname.includes("youtube.com")) {
+      const videoId = parsed.searchParams.get("v");
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+    if (parsed.hostname === "youtu.be") {
+      const videoId = parsed.pathname.replace(/^\//, "");
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function pickSheetText(
+  task: RoutineTask,
+  field: "title" | "description",
+  language: Language
+): string {
+  if (language === "en") {
+    return field === "title" ? task.title_en : task.description_en;
+  }
+  return field === "title" ? task.title_ja : task.description_ja;
+}
 
 // ---------- 表示用に正規化したステップデータ ----------
 
@@ -43,28 +70,28 @@ type RenderableStep = {
   imagePath: string | null;
   /** ふきそうじルーティンと同じ aspect ratio で表示するか */
   isWipeDownLike: boolean;
+  minutes?: number;
+  youtubeUrl?: string;
+  emoji?: string;
 };
 
-// 標準ルーティン用: translations.ts から見出し/説明/画像を解決
-function resolveStandardStep(
-  routineType: RoutineType,
-  stepKey: string,
-  t: Translation
+// Google Sheets (routine_tasks) からステップを解決
+function resolveSheetStep(
+  tasks: RoutineTask[],
+  index: number,
+  language: Language
 ): RenderableStep | null {
-  const stepData =
-    routineType === "morning"
-      ? t.morningSteps[stepKey]
-      : routineType === "eyeExercise"
-      ? t.eyeExerciseSteps[stepKey]
-      : t.stretchingSteps[stepKey];
-
-  if (!stepData) return null;
+  const task = tasks[index];
+  if (!task) return null;
 
   return {
-    title: stepData.title,
-    description: stepData.description,
-    imagePath: `/images/${routineType}-${stepKey}.png`,
-    isWipeDownLike: routineType === "morning",
+    title: pickSheetText(task, "title", language),
+    description: pickSheetText(task, "description", language),
+    imagePath: null,
+    isWipeDownLike: false,
+    minutes: task.minutes,
+    youtubeUrl: task.youtubeUrl,
+    emoji: task.emoji,
   };
 }
 
@@ -189,14 +216,57 @@ const ActionStep = ({
   onNext,
   onBack,
   showBack,
+  onTaskComplete,
 }: {
   step: RenderableStep;
   stepNumber: number;
   onNext: () => void;
   onBack: () => void;
   showBack: boolean;
+  onTaskComplete?: (detail: {
+    durationSeconds: number;
+    stepNumber: number;
+    taskTitle: string;
+  }) => void | Promise<void>;
 }) => {
   const { t } = useStore();
+  const totalSeconds = Math.max(0, (step.minutes ?? 0) * 60);
+  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
+  const [isPaused, setIsPaused] = useState(false);
+  const startedAtRef = useRef(Date.now());
+  const youtubeEmbedUrl = step.youtubeUrl ? getYoutubeEmbedUrl(step.youtubeUrl) : null;
+
+  useEffect(() => {
+    setSecondsLeft(totalSeconds);
+    setIsPaused(false);
+    startedAtRef.current = Date.now();
+  }, [stepNumber, totalSeconds]);
+
+  useEffect(() => {
+    if (isPaused || secondsLeft <= 0 || totalSeconds === 0) return;
+    const timerId = window.setInterval(() => {
+      setSecondsLeft((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => window.clearInterval(timerId);
+  }, [isPaused, secondsLeft, totalSeconds]);
+
+  const minutesDisplay = Math.floor(secondsLeft / 60);
+  const secondsDisplay = String(secondsLeft % 60).padStart(2, "0");
+
+  const handleNext = async () => {
+    const durationSeconds = Math.max(
+      0,
+      Math.round((Date.now() - startedAtRef.current) / 1000),
+    );
+    if (onTaskComplete) {
+      await onTaskComplete({
+        durationSeconds,
+        stepNumber,
+        taskTitle: step.title,
+      });
+    }
+    onNext();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -204,10 +274,20 @@ const ActionStep = ({
         className={`w-full bg-secondary/20 rounded-2xl mb-6 overflow-hidden shadow-sm relative flex items-center justify-center ${
           step.isWipeDownLike
             ? "aspect-[4/3] max-w-[280px] mx-auto"
+            : youtubeEmbedUrl
+            ? "aspect-video max-w-[480px] mx-auto"
             : "aspect-[3/4] max-w-[300px] mx-auto"
         }`}
       >
-        {step.imagePath && (
+        {youtubeEmbedUrl ? (
+          <iframe
+            src={youtubeEmbedUrl}
+            title={step.title}
+            className="w-full h-full absolute inset-0 z-10"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : step.imagePath ? (
           <img
             src={step.imagePath}
             alt={step.title}
@@ -216,17 +296,45 @@ const ActionStep = ({
               e.currentTarget.style.display = "none";
             }}
           />
+        ) : null}
+        {!youtubeEmbedUrl && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <div className="text-8xl font-bold text-primary/20">
+              {step.emoji || stepNumber}
+            </div>
+          </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-          <div className="text-8xl font-bold text-primary/20">{stepNumber}</div>
-        </div>
       </div>
 
       <div className="space-y-4 flex-1">
+        {totalSeconds > 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 px-4 py-3">
+            <div>
+              <p className="text-sm text-muted-foreground">{t.timeRemaining}</p>
+              <p className="text-2xl font-bold text-primary" data-testid="text-timer">
+                {minutesDisplay}
+                {t.minutesShort} {secondsDisplay}
+                {t.secondsShort}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 shrink-0"
+              onClick={() => setIsPaused((prev) => !prev)}
+              data-testid="button-timer-pause"
+            >
+              {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+            </Button>
+          </div>
+        )}
+
         <h2
           className="text-2xl md:text-3xl font-heading font-bold text-primary"
           data-testid={`text-step-title-${stepNumber}`}
         >
+          {step.emoji ? `${step.emoji} ` : ""}
           {step.title}
         </h2>
         <p
@@ -250,7 +358,7 @@ const ActionStep = ({
           </Button>
         )}
         <Button
-          onClick={onNext}
+          onClick={handleNext}
           className="flex-1 h-16 text-xl rounded-xl shadow-md"
           data-testid="button-next-step"
         >
@@ -270,7 +378,7 @@ const FeedbackStep = ({
   /** routine_records.routineType に書き込む値。標準なら 'morning' 等、追加なら 'custom:<id>' */
   routineRecordType: string;
 }) => {
-  const { t, userName } = useStore();
+  const { t } = useStore();
   const queryClient = useQueryClient();
   const [feeling, setFeeling] = useState<any>(null);
   const [hasPressedFinish, setHasPressedFinish] = useState(false);
@@ -286,11 +394,12 @@ const FeedbackStep = ({
     if (hasPressedFinish) return;
     setHasPressedFinish(true);
     const submittedFeeling = feeling || "good";
+    const logUserName = getRoutineSessionUserName();
     // ゲーム開始前に record の生成を待つ。失敗してもゲームには進めるよう null を渡す。
     let recordId: string | null = null;
     try {
       const created = await createRecordMutation.mutateAsync({
-        userName,
+        userName: logUserName,
         feeling: submittedFeeling,
         routineType: routineRecordType,
       });
@@ -314,7 +423,7 @@ const FeedbackStep = ({
       <div className="text-center space-y-3">
         <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
           {t.greatJob}
-          {userName}!
+          {getRoutineSessionUserName()}!
         </h2>
         <p className="text-lg text-muted-foreground">{t.howDoYouFeel}</p>
       </div>
@@ -362,13 +471,13 @@ export default function Routine() {
   const {
     t,
     language,
-    userName,
     currentStepIndex,
     nextStep,
     prevStep,
     exitRoutine,
     routineType,
     activeCustomRoutineId,
+    setStandardStepCount,
   } = useStore();
   const [, setLocation] = useLocation();
   const [showMiniGame, setShowMiniGame] = useState(false);
@@ -378,10 +487,28 @@ export default function Routine() {
   const customQuery = useCustomRoutine(activeCustomRoutineId);
   const customRoutine = customQuery.data;
 
+  const routineTasksQuery = useQuery({
+    queryKey: ["routine-tasks"],
+    queryFn: getRoutineTasks,
+    enabled: !isCustom,
+    staleTime: 5 * 60 * 1000,
+  });
+  const routineTasks = routineTasksQuery.data ?? [];
+
+  useEffect(() => {
+    if (isCustom) {
+      setStandardStepCount(null);
+      return;
+    }
+    if (routineTasks.length > 0) {
+      setStandardStepCount(routineTasks.length);
+    }
+  }, [isCustom, routineTasks.length, setStandardStepCount]);
+
   // ステップ数とラベルは標準/追加で別解決
   const totalSteps = isCustom
     ? customRoutine?.steps.length ?? 0
-    : STEP_COUNTS[routineType] ?? 9;
+    : routineTasks.length;
   const introCount = isCustom ? 0 : INTRO_COUNTS[routineType] ?? 0;
   const totalWithIntro = introCount + totalSteps;
 
@@ -393,7 +520,6 @@ export default function Routine() {
   const isIntroPhase = !isCustom && currentStepIndex < introCount;
   const introKey = `intro${currentStepIndex + 1}`;
   const actualStepIndex = currentStepIndex - introCount;
-  const stepKey = `step${actualStepIndex + 1}`;
   const isFeedback = !isIntroPhase && actualStepIndex >= totalSteps;
 
   const renderStep: RenderableStep | null = useMemo(() => {
@@ -402,9 +528,16 @@ export default function Routine() {
       if (!customRoutine) return null;
       return resolveCustomStep(customRoutine, actualStepIndex, language);
     }
-    return resolveStandardStep(routineType, stepKey, t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCustom, customRoutine, actualStepIndex, routineType, stepKey, language, isIntroPhase, isFeedback]);
+    return resolveSheetStep(routineTasks, actualStepIndex, language);
+  }, [
+    isCustom,
+    customRoutine,
+    actualStepIndex,
+    routineTasks,
+    language,
+    isIntroPhase,
+    isFeedback,
+  ]);
 
   const progress = totalWithIntro > 0
     ? ((currentStepIndex + 1) / (totalWithIntro + 1)) * 100
@@ -437,6 +570,44 @@ export default function Routine() {
     }
   };
 
+  const activeUserName = getRoutineSessionUserName();
+
+  const handleTaskComplete = async ({
+    durationSeconds,
+    stepNumber,
+    taskTitle,
+  }: {
+    durationSeconds: number;
+    stepNumber: number;
+    taskTitle: string;
+  }) => {
+    const userName = getRoutineSessionUserName();
+    console.log("append user_name:", userName);
+    if (!userName) {
+      console.warn("[routine] appendRoutineLog skipped: no session user name");
+      return;
+    }
+
+    const step = isCustom
+      ? stepNumber
+      : routineTasks[stepNumber - 1]?.step ?? stepNumber;
+
+    const payload = {
+      userName,
+      step,
+      taskTitle,
+      completed: true as const,
+      durationSeconds,
+    };
+
+    try {
+      await appendRoutineLog(payload);
+      console.log("[routine] appendRoutineLog success:", payload);
+    } catch (err) {
+      console.warn("[routine] appendRoutineLog failed:", err);
+    }
+  };
+
   const handleShowMiniGame = (recordId: string | null) => {
     setLastRecordId(recordId);
     setShowMiniGame(true);
@@ -451,6 +622,15 @@ export default function Routine() {
 
   // カスタムルーティン読み込み中
   if (isCustom && customQuery.isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        <p className="text-lg">{t.loading}</p>
+      </div>
+    );
+  }
+
+  // 標準ルーティン (Google Sheets) 読み込み中
+  if (!isCustom && routineTasksQuery.isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p className="text-lg">{t.loading}</p>
@@ -484,7 +664,7 @@ export default function Routine() {
           onClose={handleCloseMiniGame}
           language={language}
           scoreContext={{
-            userName,
+            userName: activeUserName,
             recordRoutineType: routineRecordType,
             routineRecordId: lastRecordId,
             gameType: miniGameType,
@@ -552,6 +732,7 @@ export default function Routine() {
                     onNext={nextStep}
                     onBack={prevStep}
                     showBack={currentStepIndex > 0}
+                    onTaskComplete={handleTaskComplete}
                   />
                 ) : null}
               </motion.div>

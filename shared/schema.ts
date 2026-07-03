@@ -178,6 +178,37 @@ export type GameScore = typeof gameScores.$inferSelect;
 //   ユーザーごとの今週の取り組みを 1 オブジェクトに集約。
 // =====================================================================
 
+// =====================================================================
+// Routine Tasks (Google Sheets routine_tasks シート — API レスポンス用)
+// =====================================================================
+
+export const routineTaskSchema = z.object({
+  step: z.number().int().min(1),
+  title_en: z.string(),
+  title_ja: z.string(),
+  description_en: z.string(),
+  description_ja: z.string(),
+  minutes: z.number().int().min(0),
+  youtubeUrl: z.string(),
+  emoji: z.string(),
+});
+
+export type RoutineTask = z.infer<typeof routineTaskSchema>;
+
+// =====================================================================
+// Routine Logs (Google Sheets routine_logs シート — API リクエスト用)
+// =====================================================================
+
+export const insertRoutineLogSchema = z.object({
+  userName: z.string().trim().min(1),
+  step: z.number().int().min(1),
+  taskTitle: z.string().trim().min(1),
+  completed: z.literal(true),
+  durationSeconds: z.number().int().min(0),
+});
+
+export type InsertRoutineLog = z.infer<typeof insertRoutineLogSchema>;
+
 export type WeeklySummary = {
   userName: string;
   weekStartIso: string;

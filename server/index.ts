@@ -1,8 +1,13 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, "..", ".env") });
 
 const app = express();
 const httpServer = createServer(app);

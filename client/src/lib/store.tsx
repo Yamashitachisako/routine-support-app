@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Language, Translation, translations } from './translations';
+import {
+  clearRoutineSessionUserName,
+  setRoutineSessionUserName,
+} from './routineSessionUser';
 
 export interface HistoryRecord {
   id: string;
@@ -44,16 +48,23 @@ interface AppState {
   currentStepIndex: number;
   startTime: number | null;
 
+  /** 標準ルーティンのステップ数 (Google Sheets 読み込み後にセット) */
+  standardStepCount: number | null;
+
+  /** ルーティン開始時に確定した利用者名 (routine_logs 等に使用) */
+  routineSessionUserName: string;
+
   setLanguage: (lang: Language) => void;
   setUserName: (name: string) => void;
   setRoutineType: (type: RoutineType) => void;
   setActiveCustomRoutineId: (id: string | null) => void;
+  setStandardStepCount: (count: number | null) => void;
 
   openOnboarding: () => void;
   closeOnboarding: () => void;
   markOnboardingSeen: () => void;
 
-  startRoutine: () => void;
+  startRoutine: (sessionName: string) => void;
   nextStep: () => void;
   prevStep: () => void;
   exitRoutine: () => void;
@@ -61,7 +72,7 @@ interface AppState {
   getTotalSteps: () => number;
 }
 
-const useBaseStore = create<AppState>()(
+export const useBaseStore = create<AppState>()(
   persist(
     (set, get) => ({
       language: 'ja',
@@ -69,11 +80,13 @@ const useBaseStore = create<AppState>()(
       userName: '',
       routineType: 'morning',
       activeCustomRoutineId: null,
+      standardStepCount: null,
       hasSeenOnboarding: false,
       isOnboardingOpen: false,
       isRoutineActive: false,
       currentStepIndex: 0,
       startTime: null,
+      routineSessionUserName: '',
 
       setLanguage: (lang) => set({ language: lang }),
       setUserName: (name) => set({ userName: name }),
@@ -81,23 +94,31 @@ const useBaseStore = create<AppState>()(
       // 標準ルーティンを選択するとカスタム選択は解除する
       setRoutineType: (type) => set({ routineType: type, activeCustomRoutineId: null }),
       setActiveCustomRoutineId: (id) => set({ activeCustomRoutineId: id }),
+      setStandardStepCount: (count) => set({ standardStepCount: count }),
 
       openOnboarding: () => set({ isOnboardingOpen: true }),
       closeOnboarding: () => set({ isOnboardingOpen: false, hasSeenOnboarding: true }),
       markOnboardingSeen: () => set({ hasSeenOnboarding: true }),
 
-      startRoutine: () => set({
-        isRoutineActive: true,
-        currentStepIndex: 0,
-        startTime: Date.now()
-      }),
+      startRoutine: (sessionName: string) => {
+        const name = sessionName.trim();
+        if (!name) return;
+        setRoutineSessionUserName(name);
+        set({
+          isRoutineActive: true,
+          currentStepIndex: 0,
+          startTime: Date.now(),
+          routineSessionUserName: name,
+        });
+      },
 
       nextStep: () => set((state) => {
-        // カスタム実行中はステップ数が動的に決まるため上限制限はコンポーネント側に任せる
         if (state.activeCustomRoutineId) {
           return { currentStepIndex: state.currentStepIndex + 1 };
         }
-        const totalSteps = STEP_COUNTS[state.routineType] + INTRO_COUNTS[state.routineType];
+        const totalSteps =
+          state.standardStepCount ??
+          STEP_COUNTS[state.routineType] + INTRO_COUNTS[state.routineType];
         return { currentStepIndex: Math.min(state.currentStepIndex + 1, totalSteps) };
       }),
 
@@ -105,23 +126,33 @@ const useBaseStore = create<AppState>()(
         currentStepIndex: Math.max(state.currentStepIndex - 1, 0)
       })),
 
-      exitRoutine: () => set({
-        isRoutineActive: false,
-        currentStepIndex: 0,
-        startTime: null,
-        activeCustomRoutineId: null,
-      }),
+      exitRoutine: () => {
+        clearRoutineSessionUserName();
+        set({
+          isRoutineActive: false,
+          currentStepIndex: 0,
+          startTime: null,
+          activeCustomRoutineId: null,
+          standardStepCount: null,
+          routineSessionUserName: '',
+        });
+      },
 
-      addHistory: (record) => set((state) => ({
-        history: [
-          { ...record, id: Math.random().toString(36).substring(7) },
-          ...state.history
-        ],
-        isRoutineActive: false,
-        currentStepIndex: 0,
-        startTime: null,
-        activeCustomRoutineId: null,
-      })),
+      addHistory: (record) => {
+        clearRoutineSessionUserName();
+        set((state) => ({
+          history: [
+            { ...record, id: Math.random().toString(36).substring(7) },
+            ...state.history
+          ],
+          isRoutineActive: false,
+          currentStepIndex: 0,
+          startTime: null,
+          activeCustomRoutineId: null,
+          standardStepCount: null,
+          routineSessionUserName: '',
+        }));
+      },
 
       getTotalSteps: () => STEP_COUNTS[get().routineType],
     }),
@@ -133,6 +164,16 @@ const useBaseStore = create<AppState>()(
         userName: state.userName,
         routineType: state.routineType,
         hasSeenOnboarding: state.hasSeenOnboarding,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as object),
+        routineSessionUserName: current.routineSessionUserName,
+        isRoutineActive: current.isRoutineActive,
+        currentStepIndex: current.isRoutineActive ? current.currentStepIndex : 0,
+        startTime: current.isRoutineActive ? current.startTime : null,
+        activeCustomRoutineId: current.isRoutineActive ? current.activeCustomRoutineId : null,
+        standardStepCount: current.isRoutineActive ? current.standardStepCount : null,
       }),
     }
   )
