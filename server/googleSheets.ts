@@ -212,7 +212,14 @@ export async function appendRoutineLog(input: {
     return { ok: true };
   } catch (error) {
     const apiError = formatGoogleApiError(error);
-    console.error("[googleSheets] routine_logs append failed:", apiError.message, apiError.responseData);
+    console.error(
+      "[googleSheets] FULL ERROR",
+      JSON.stringify(error, null, 2),
+    );
+    console.error(
+      "[googleSheets] RESPONSE",
+      JSON.stringify((error as any)?.response?.data ?? null, null, 2),
+    );
     if (apiError.status === 403) {
       return {
         ok: false,
