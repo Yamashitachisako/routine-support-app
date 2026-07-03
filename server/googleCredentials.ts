@@ -32,8 +32,37 @@ export type ServiceAccountCredentials = {
 
 type ServiceAccountJson = Omit<ServiceAccountCredentials, "source">;
 
+const INVALID_GOOGLE_SHEETS_ID_VALUES = new Set(["your_spreadsheet_id"]);
+
 export function getGoogleSheetsId(): string | null {
-  return process.env.GOOGLE_SHEETS_ID?.trim() || null;
+  // Always read the spreadsheet ID from process.env. Never fall back to .env.example.
+  const value = process.env.GOOGLE_SHEETS_ID?.trim() ?? "";
+  if (!value) return null;
+
+  if (INVALID_GOOGLE_SHEETS_ID_VALUES.has(value.toLowerCase())) {
+    console.warn(
+      "[googleCredentials] Ignoring placeholder GOOGLE_SHEETS_ID from .env.example. " +
+        "Set process.env.GOOGLE_SHEETS_ID to the real spreadsheet ID.",
+    );
+    return null;
+  }
+
+  return value;
+}
+
+export function formatGoogleSheetsIdPreview(sheetId: string | null): {
+  first6: string | null;
+  last6: string | null;
+} {
+  const value = sheetId?.trim() ?? "";
+  if (!value) {
+    return { first6: null, last6: null };
+  }
+
+  return {
+    first6: value.slice(0, 6),
+    last6: value.slice(-6),
+  };
 }
 
 export function normalizeGooglePrivateKey(raw: string): string {
@@ -218,9 +247,12 @@ export function readServiceAccountJson(): ServiceAccountJson | null {
 export function logGoogleSheetsConfig(): void {
   const sheetId = getGoogleSheetsId();
   const serviceAccount = loadServiceAccountCredentials();
+  const sheetIdPreview = formatGoogleSheetsIdPreview(sheetId);
 
   console.log("[googleCredentials] GOOGLE_SHEETS_ID loaded:", {
-    value: sheetId,
+    source: "process.env.GOOGLE_SHEETS_ID",
+    first6: sheetIdPreview.first6,
+    last6: sheetIdPreview.last6,
     length: sheetId?.length ?? 0,
   });
   console.log("[googleCredentials] credential source:", serviceAccount?.source ?? "none");

@@ -65,7 +65,7 @@ export async function fetchRoutineTasks(): Promise<{
     return {
       tasks: FALLBACK_ROUTINE_TASKS,
       source: "fallback",
-      error: "GOOGLE_SHEETS_ID is not set in .env",
+      error: "process.env.GOOGLE_SHEETS_ID is not set",
     };
   }
 
@@ -157,7 +157,7 @@ export async function appendRoutineLog(input: {
   const auth = createGoogleSheetsWriteAuth();
 
   if (!sheetId) {
-    return { ok: false, error: "GOOGLE_SHEETS_ID is not set in .env" };
+    return { ok: false, error: "process.env.GOOGLE_SHEETS_ID is not set" };
   }
 
   if (!auth) {

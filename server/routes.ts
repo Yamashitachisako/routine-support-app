@@ -14,7 +14,9 @@ import { computeWeeklySummary } from "./summary";
 import { appendRoutineLog, fetchRoutineTasks } from "./googleSheets";
 import {
   SHEET_RANGE,
+  ROUTINE_LOGS_APPEND_RANGE,
   createGoogleSheetsAuth,
+  formatGoogleSheetsIdPreview,
   getGoogleSheetsId,
   loadServiceAccountCredentials,
   formatTokyoTimestamp,
@@ -118,6 +120,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         duration_seconds: body.durationSeconds,
       };
       console.log("[routine-logs] append request:", sheetRow);
+
+      const spreadsheetId = getGoogleSheetsId();
+      const sheetIdPreview = formatGoogleSheetsIdPreview(spreadsheetId);
+      const credentialSource = loadServiceAccountCredentials()?.source ?? "none";
+      console.log("[routine-logs] append config:", {
+        GOOGLE_SHEETS_ID_first6: sheetIdPreview.first6,
+        GOOGLE_SHEETS_ID_last6: sheetIdPreview.last6,
+        ROUTINE_LOGS_APPEND_RANGE,
+        credentialSource,
+      });
 
       const appendResult = await appendRoutineLog(body);
       if (!appendResult.ok) {
