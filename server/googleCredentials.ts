@@ -1,10 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { google } from "googleapis";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-export const PROJECT_ROOT = resolve(__dirname, "..");
+export const PROJECT_ROOT = process.cwd();
 export const SERVICE_ACCOUNT_JSON_PATH = resolve(
   PROJECT_ROOT,
   "credentials",
@@ -23,18 +21,40 @@ export function formatTokyoTimestamp(date = new Date()): string {
   return date.toLocaleString("sv-SE", { timeZone: "Asia/Tokyo" });
 }
 
-type ServiceAccountJson = {
+export type ServiceAccountCredentials = {
   type?: string;
   project_id?: string;
   client_email: string;
   private_key: string;
+  source: "env" | "json";
 };
+
+type ServiceAccountJson = Omit<ServiceAccountCredentials, "source">;
 
 export function getGoogleSheetsId(): string | null {
   return process.env.GOOGLE_SHEETS_ID?.trim() || null;
 }
 
-export function readServiceAccountJson(): ServiceAccountJson | null {
+export function normalizeGooglePrivateKey(raw: string): string {
+  return raw.replace(/\\n/g, "\n").trim();
+}
+
+function readEnvServiceAccount(): ServiceAccountJson | null {
+  const client_email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const rawPrivateKey = process.env.GOOGLE_PRIVATE_KEY?.trim();
+  if (!client_email || !rawPrivateKey) return null;
+
+  const private_key = normalizeGooglePrivateKey(rawPrivateKey);
+  if (!private_key.includes("BEGIN PRIVATE KEY")) return null;
+
+  return {
+    type: "service_account",
+    client_email,
+    private_key,
+  };
+}
+
+function readJsonServiceAccount(): ServiceAccountJson | null {
   if (!existsSync(SERVICE_ACCOUNT_JSON_PATH)) {
     return null;
   }
@@ -48,17 +68,43 @@ export function readServiceAccountJson(): ServiceAccountJson | null {
   }
 }
 
+/** 環境変数を優先し、なければ credentials/service-account.json を読む */
+export function loadServiceAccountCredentials(): ServiceAccountCredentials | null {
+  const fromEnv = readEnvServiceAccount();
+  if (fromEnv) {
+    return { ...fromEnv, source: "env" };
+  }
+
+  const fromJson = readJsonServiceAccount();
+  if (fromJson) {
+    return { ...fromJson, source: "json" };
+  }
+
+  return null;
+}
+
+/** @deprecated loadServiceAccountCredentials を使用 */
+export function readServiceAccountJson(): ServiceAccountJson | null {
+  const creds = loadServiceAccountCredentials();
+  if (!creds) return null;
+  const { source: _source, ...json } = creds;
+  return json;
+}
+
 export function logGoogleSheetsConfig(): void {
   const sheetId = getGoogleSheetsId();
-  const serviceAccount = readServiceAccountJson();
+  const serviceAccount = loadServiceAccountCredentials();
 
   console.log("[googleCredentials] GOOGLE_SHEETS_ID loaded:", {
     value: sheetId,
     length: sheetId?.length ?? 0,
   });
-  console.log("[googleCredentials] service-account.json path:", SERVICE_ACCOUNT_JSON_PATH);
-  console.log("[googleCredentials] service-account.json exists:", existsSync(SERVICE_ACCOUNT_JSON_PATH));
-  console.log("[googleCredentials] service-account.json loaded:", {
+  console.log("[googleCredentials] credential source:", serviceAccount?.source ?? "none");
+  if (serviceAccount?.source === "json") {
+    console.log("[googleCredentials] service-account.json path:", SERVICE_ACCOUNT_JSON_PATH);
+    console.log("[googleCredentials] service-account.json exists:", existsSync(SERVICE_ACCOUNT_JSON_PATH));
+  }
+  console.log("[googleCredentials] service account loaded:", {
     type: serviceAccount?.type ?? null,
     project_id: serviceAccount?.project_id ?? null,
     client_email: serviceAccount?.client_email ?? null,
@@ -69,28 +115,34 @@ export function logGoogleSheetsConfig(): void {
   console.log("[googleSheets] range:", SHEET_RANGE);
 }
 
-export function createGoogleSheetsAuth(): InstanceType<typeof google.auth.GoogleAuth> | null {
-  if (!existsSync(SERVICE_ACCOUNT_JSON_PATH)) {
-    console.warn("[googleCredentials] Service account JSON not found");
+function createGoogleAuth(
+  scopes: string[],
+): InstanceType<typeof google.auth.GoogleAuth> | null {
+  const credentials = loadServiceAccountCredentials();
+  if (!credentials) {
+    console.warn(
+      "[googleCredentials] No Google service account credentials. " +
+        "Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY, " +
+        "or place credentials/service-account.json for local development.",
+    );
     return null;
   }
 
   return new google.auth.GoogleAuth({
-    keyFile: SERVICE_ACCOUNT_JSON_PATH,
-    scopes: [SHEETS_READONLY_SCOPE],
+    credentials: {
+      client_email: credentials.client_email,
+      private_key: credentials.private_key,
+    },
+    scopes,
   });
 }
 
-export function createGoogleSheetsWriteAuth(): InstanceType<typeof google.auth.GoogleAuth> | null {
-  if (!existsSync(SERVICE_ACCOUNT_JSON_PATH)) {
-    console.warn("[googleCredentials] Service account JSON not found");
-    return null;
-  }
+export function createGoogleSheetsAuth(): InstanceType<typeof google.auth.GoogleAuth> | null {
+  return createGoogleAuth([SHEETS_READONLY_SCOPE]);
+}
 
-  return new google.auth.GoogleAuth({
-    keyFile: SERVICE_ACCOUNT_JSON_PATH,
-    scopes: [SHEETS_WRITE_SCOPE],
-  });
+export function createGoogleSheetsWriteAuth(): InstanceType<typeof google.auth.GoogleAuth> | null {
+  return createGoogleAuth([SHEETS_WRITE_SCOPE]);
 }
 
 export function formatGoogleApiError(error: unknown): {

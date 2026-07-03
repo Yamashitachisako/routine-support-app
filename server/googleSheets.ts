@@ -9,8 +9,8 @@ import {
   formatGoogleApiError,
   formatTokyoTimestamp,
   getGoogleSheetsId,
+  loadServiceAccountCredentials,
   logGoogleSheetsConfig,
-  readServiceAccountJson,
 } from "./googleCredentials";
 
 export { FALLBACK_ROUTINE_TASKS };
@@ -58,7 +58,7 @@ export async function fetchRoutineTasks(): Promise<{
   const sheetId = getGoogleSheetsId();
   logGoogleSheetsConfig();
   const auth = createGoogleSheetsAuth();
-  const serviceAccount = readServiceAccountJson();
+  const serviceAccount = loadServiceAccountCredentials();
 
   if (!sheetId) {
     console.warn("[googleSheets] GOOGLE_SHEETS_ID is not set, using fallback routine tasks");
@@ -74,7 +74,7 @@ export async function fetchRoutineTasks(): Promise<{
     return {
       tasks: FALLBACK_ROUTINE_TASKS,
       source: "fallback",
-      error: "credentials/service-account.json not found",
+      error: "Google service account credentials not configured",
     };
   }
 
@@ -161,7 +161,7 @@ export async function appendRoutineLog(input: {
   }
 
   if (!auth) {
-    return { ok: false, error: "credentials/service-account.json not found" };
+    return { ok: false, error: "Google service account credentials not configured" };
   }
 
   const timestamp = formatTokyoTimestamp();

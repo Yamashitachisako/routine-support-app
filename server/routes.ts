@@ -16,7 +16,7 @@ import {
   SHEET_RANGE,
   createGoogleSheetsAuth,
   getGoogleSheetsId,
-  readServiceAccountJson,
+  loadServiceAccountCredentials,
   formatTokyoTimestamp,
 } from "./googleCredentials";
 
@@ -66,7 +66,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const range = SHEET_RANGE;
       const auth = createGoogleSheetsAuth();
-      const serviceAccount = readServiceAccountJson();
+      const serviceAccount = loadServiceAccountCredentials();
       const spreadsheetId = getGoogleSheetsId();
       let clientEmail = serviceAccount?.client_email ?? null;
       if (auth) {
