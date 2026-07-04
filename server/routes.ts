@@ -11,16 +11,7 @@ import {
   insertRoutineLogSchema,
 } from "@shared/schema";
 import { computeWeeklySummary } from "./summary";
-import { appendRoutineLog, fetchRoutineTasks } from "./googleSheets";
-import {
-  SHEET_RANGE,
-  ROUTINE_LOGS_APPEND_RANGE,
-  createGoogleSheetsAuth,
-  formatGoogleSheetsIdPreview,
-  getGoogleSheetsId,
-  loadServiceAccountCredentials,
-  formatTokyoTimestamp,
-} from "./googleCredentials";
+import { fetchRoutineTasks } from "./googleSheets";
 
 function send500(res: import("express").Response, where: string, error: unknown) {
   const err = error as any;
@@ -66,31 +57,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/routine-tasks", async (_req, res) => {
     try {
-      const range = SHEET_RANGE;
-      const auth = createGoogleSheetsAuth();
-      const serviceAccount = loadServiceAccountCredentials();
-      const spreadsheetId = getGoogleSheetsId();
-      let clientEmail = serviceAccount?.client_email ?? null;
-      if (auth) {
-        const client = await auth.getClient();
-        clientEmail = (client as { email?: string }).email ?? clientEmail;
-      }
-
-      console.log("Spreadsheet ID:", process.env.GOOGLE_SHEETS_ID);
-      console.log("Range:", range);
-      console.log("Client Email:", clientEmail);
-      console.log("spreadsheetId (Google Sheets API):", spreadsheetId);
-
-      const { tasks, source, error, apiErrorDetail } = await fetchRoutineTasks();
+      const { tasks, source } = await fetchRoutineTasks();
       res.setHeader("X-Routine-Tasks-Source", source);
-      res.setHeader("X-Routine-Tasks-Range", "routine_tasks!A3:H");
-      if (error) res.setHeader("X-Routine-Tasks-Error", error);
-      if (apiErrorDetail) {
-        res.setHeader(
-          "X-Routine-Tasks-Error-Detail",
-          apiErrorDetail.replace(/\r?\n/g, "").slice(0, 2000),
-        );
-      }
       return res.json(tasks);
     } catch (error) {
       console.error("[routes] GET /api/routine-tasks unexpected error:", error);
@@ -110,33 +78,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         });
       }
 
-      const body = result.data;
-      const sheetRow = {
-        timestamp: formatTokyoTimestamp(),
-        user_name: body.userName,
-        step: body.step,
-        task_title: body.taskTitle,
-        completed: body.completed,
-        duration_seconds: body.durationSeconds,
-      };
-      console.log("[routine-logs] append request:", sheetRow);
-
-      const spreadsheetId = getGoogleSheetsId();
-      const sheetIdPreview = formatGoogleSheetsIdPreview(spreadsheetId);
-      const credentialSource = loadServiceAccountCredentials()?.source ?? "none";
-      console.log("[routine-logs] append config:", {
-        GOOGLE_SHEETS_ID_first6: sheetIdPreview.first6,
-        GOOGLE_SHEETS_ID_last6: sheetIdPreview.last6,
-        ROUTINE_LOGS_APPEND_RANGE,
-        credentialSource,
-      });
-
-      const appendResult = await appendRoutineLog(body);
-      if (!appendResult.ok) {
-        return res.status(502).json({ message: appendResult.error });
-      }
-
-      return res.status(201).json({ ok: true });
+      return res.status(201).json({ ok: true, skipped: true });
     } catch (error) {
       return send500(res, "POST /api/routine-logs", error);
     }

@@ -17,13 +17,19 @@ import {
   Pause,
   Play,
 } from "lucide-react";
-import { appendRoutineLog, createRoutineRecord, getRoutineTasks } from "@/lib/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createRoutineRecord } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import MiniGame from "@/components/mini-game";
 import { useCustomRoutine, pickI18nText } from "@/hooks/useCustomRoutines";
-import type { CustomRoutineWithSteps, RewardGameType, RoutineTask } from "@shared/schema";
+import type { CustomRoutineWithSteps, RewardGameType } from "@shared/schema";
 import type { RoutineType } from "@/lib/store";
 import type { Language, Translation } from "@/lib/translations";
+
+const STEP_COUNTS: Record<RoutineType, number> = {
+  morning: 9,
+  eyeExercise: 9,
+  stretching: 16,
+};
 
 const INTRO_COUNTS: Record<RoutineType, number> = {
   morning: 0,
@@ -50,17 +56,6 @@ function getYoutubeEmbedUrl(url: string): string | null {
   return null;
 }
 
-function pickSheetText(
-  task: RoutineTask,
-  field: "title" | "description",
-  language: Language
-): string {
-  if (language === "en") {
-    return field === "title" ? task.title_en : task.description_en;
-  }
-  return field === "title" ? task.title_ja : task.description_ja;
-}
-
 // ---------- 表示用に正規化したステップデータ ----------
 
 type RenderableStep = {
@@ -75,23 +70,25 @@ type RenderableStep = {
   emoji?: string;
 };
 
-// Google Sheets (routine_tasks) からステップを解決
-function resolveSheetStep(
-  tasks: RoutineTask[],
-  index: number,
-  language: Language
+function resolveStandardStep(
+  routineType: RoutineType,
+  stepKey: string,
+  t: Translation,
 ): RenderableStep | null {
-  const task = tasks[index];
-  if (!task) return null;
+  const stepData =
+    routineType === "morning"
+      ? t.morningSteps[stepKey]
+      : routineType === "eyeExercise"
+        ? t.eyeExerciseSteps[stepKey]
+        : t.stretchingSteps[stepKey];
+
+  if (!stepData) return null;
 
   return {
-    title: pickSheetText(task, "title", language),
-    description: pickSheetText(task, "description", language),
-    imagePath: null,
-    isWipeDownLike: false,
-    minutes: task.minutes,
-    youtubeUrl: task.youtubeUrl,
-    emoji: task.emoji,
+    title: stepData.title,
+    description: stepData.description,
+    imagePath: `/images/${routineType}-${stepKey}.png`,
+    isWipeDownLike: routineType === "morning",
   };
 }
 
@@ -99,7 +96,7 @@ function resolveSheetStep(
 function resolveCustomStep(
   routine: CustomRoutineWithSteps,
   index: number,
-  language: "ja" | "en" | "zh"
+  language: Language,
 ): RenderableStep | null {
   const step = routine.steps[index];
   if (!step) return null;
@@ -477,7 +474,6 @@ export default function Routine() {
     exitRoutine,
     routineType,
     activeCustomRoutineId,
-    setStandardStepCount,
   } = useStore();
   const [, setLocation] = useLocation();
   const [showMiniGame, setShowMiniGame] = useState(false);
@@ -487,28 +483,10 @@ export default function Routine() {
   const customQuery = useCustomRoutine(activeCustomRoutineId);
   const customRoutine = customQuery.data;
 
-  const routineTasksQuery = useQuery({
-    queryKey: ["routine-tasks"],
-    queryFn: getRoutineTasks,
-    enabled: !isCustom,
-    staleTime: 5 * 60 * 1000,
-  });
-  const routineTasks = routineTasksQuery.data ?? [];
-
-  useEffect(() => {
-    if (isCustom) {
-      setStandardStepCount(null);
-      return;
-    }
-    if (routineTasks.length > 0) {
-      setStandardStepCount(routineTasks.length);
-    }
-  }, [isCustom, routineTasks.length, setStandardStepCount]);
-
   // ステップ数とラベルは標準/追加で別解決
   const totalSteps = isCustom
     ? customRoutine?.steps.length ?? 0
-    : routineTasks.length;
+    : STEP_COUNTS[routineType] ?? 9;
   const introCount = isCustom ? 0 : INTRO_COUNTS[routineType] ?? 0;
   const totalWithIntro = introCount + totalSteps;
 
@@ -520,6 +498,7 @@ export default function Routine() {
   const isIntroPhase = !isCustom && currentStepIndex < introCount;
   const introKey = `intro${currentStepIndex + 1}`;
   const actualStepIndex = currentStepIndex - introCount;
+  const stepKey = `step${actualStepIndex + 1}`;
   const isFeedback = !isIntroPhase && actualStepIndex >= totalSteps;
 
   const renderStep: RenderableStep | null = useMemo(() => {
@@ -528,12 +507,14 @@ export default function Routine() {
       if (!customRoutine) return null;
       return resolveCustomStep(customRoutine, actualStepIndex, language);
     }
-    return resolveSheetStep(routineTasks, actualStepIndex, language);
+    return resolveStandardStep(routineType, stepKey, t);
   }, [
     isCustom,
     customRoutine,
     actualStepIndex,
-    routineTasks,
+    routineType,
+    stepKey,
+    t,
     language,
     isIntroPhase,
     isFeedback,
@@ -572,42 +553,6 @@ export default function Routine() {
 
   const activeUserName = getRoutineSessionUserName();
 
-  const handleTaskComplete = async ({
-    durationSeconds,
-    stepNumber,
-    taskTitle,
-  }: {
-    durationSeconds: number;
-    stepNumber: number;
-    taskTitle: string;
-  }) => {
-    const userName = getRoutineSessionUserName();
-    console.log("append user_name:", userName);
-    if (!userName) {
-      console.warn("[routine] appendRoutineLog skipped: no session user name");
-      return;
-    }
-
-    const step = isCustom
-      ? stepNumber
-      : routineTasks[stepNumber - 1]?.step ?? stepNumber;
-
-    const payload = {
-      userName,
-      step,
-      taskTitle,
-      completed: true as const,
-      durationSeconds,
-    };
-
-    try {
-      await appendRoutineLog(payload);
-      console.log("[routine] appendRoutineLog success:", payload);
-    } catch (err) {
-      console.warn("[routine] appendRoutineLog failed:", err);
-    }
-  };
-
   const handleShowMiniGame = (recordId: string | null) => {
     setLastRecordId(recordId);
     setShowMiniGame(true);
@@ -622,15 +567,6 @@ export default function Routine() {
 
   // カスタムルーティン読み込み中
   if (isCustom && customQuery.isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p className="text-lg">{t.loading}</p>
-      </div>
-    );
-  }
-
-  // 標準ルーティン (Google Sheets) 読み込み中
-  if (!isCustom && routineTasksQuery.isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p className="text-lg">{t.loading}</p>
@@ -732,7 +668,6 @@ export default function Routine() {
                     onNext={nextStep}
                     onBack={prevStep}
                     showBack={currentStepIndex > 0}
-                    onTaskComplete={handleTaskComplete}
                   />
                 ) : null}
               </motion.div>
