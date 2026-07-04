@@ -154,6 +154,7 @@ export async function appendRoutineLog(input: {
   durationSeconds: number;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const sheetId = getGoogleSheetsId();
+  const spreadsheetId = sheetId;
   const auth = createGoogleSheetsWriteAuth();
 
   if (!sheetId) {
@@ -190,9 +191,11 @@ export async function appendRoutineLog(input: {
     const sheets = google.sheets({ version: "v4", auth });
     console.log("spreadsheetId =", sheetId);
     console.log("range =", ROUTINE_LOGS_APPEND_RANGE);
+    console.log("spreadsheetId used =", spreadsheetId);
+    console.log("sheetId source =", "getGoogleSheetsId() -> process.env.GOOGLE_SHEETS_ID");
     try {
       const spreadsheet = await sheets.spreadsheets.get({
-        spreadsheetId: sheetId,
+        spreadsheetId,
         fields: "properties.title,sheets.properties.title",
       });
       console.log("[googleSheets] spreadsheets.get success:", {
@@ -208,7 +211,7 @@ export async function appendRoutineLog(input: {
       throw error;
     }
     const response = await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
+      spreadsheetId,
       range: ROUTINE_LOGS_APPEND_RANGE,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
@@ -237,6 +240,10 @@ export async function appendRoutineLog(input: {
       "[googleSheets] RESPONSE",
       JSON.stringify((error as any)?.response?.data ?? null, null, 2),
     );
+    console.error("sheetId =", sheetId);
+    console.error("range =", ROUTINE_LOGS_APPEND_RANGE);
+    console.error("spreadsheetId used =", spreadsheetId);
+    console.error("sheetId source =", "getGoogleSheetsId() -> process.env.GOOGLE_SHEETS_ID");
     if (apiError.status === 403) {
       return {
         ok: false,
