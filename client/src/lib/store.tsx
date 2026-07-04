@@ -105,6 +105,7 @@ export const useBaseStore = create<AppState>()(
         if (!name) return;
         setRoutineSessionUserName(name);
         set({
+          userName: name,
           isRoutineActive: true,
           currentStepIndex: 0,
           startTime: Date.now(),
