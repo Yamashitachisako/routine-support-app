@@ -27,30 +27,43 @@ function send500(res: import("express").Response, where: string, error: unknown)
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.get("/api/health", async (_req, res) => {
     const facadeMode = storage instanceof StorageFacade ? storage.getMode() : "db";
+    const isDbMode = facadeMode === "db";
     const result: any = {
       ok: true,
       storageMode: facadeMode,
+      fallbackStoragePath:
+        storage instanceof StorageFacade && facadeMode === "file"
+          ? storage.getFallbackStoragePath()
+          : null,
       databaseUrlPresent: Boolean(process.env.DATABASE_URL),
       databaseUrlPreview: process.env.DATABASE_URL
         ? process.env.DATABASE_URL.replace(/:[^:@]*@/, ":***@").slice(0, 80)
         : null,
       checks: {} as Record<string, any>,
     };
-    try {
-      const ping = await db.execute(sql`select 1 as one`);
-      result.checks.ping = { ok: true, rows: ping.rows ?? ping };
-    } catch (err: any) {
-      result.ok = false;
-      result.checks.ping = { ok: false, message: err.message, code: err.code };
-    }
-    for (const tbl of ["routine_records", "custom_routines", "custom_routine_steps", "game_scores"] as const) {
+    if (isDbMode) {
       try {
-        const r = await db.execute(sql`select to_regclass(${"public." + tbl}) as exists`);
-        result.checks[tbl] = { ok: true, exists: Boolean((r.rows ?? r)[0]?.exists) };
+        const ping = await db.execute(sql`select 1 as one`);
+        result.checks.ping = { ok: true, rows: ping.rows ?? ping };
       } catch (err: any) {
         result.ok = false;
-        result.checks[tbl] = { ok: false, message: err.message };
+        result.checks.ping = { ok: false, message: err.message, code: err.code };
       }
+      for (const tbl of ["routine_records", "custom_routines", "custom_routine_steps", "game_scores"] as const) {
+        try {
+          const r = await db.execute(sql`select to_regclass(${"public." + tbl}) as exists`);
+          result.checks[tbl] = { ok: true, exists: Boolean((r.rows ?? r)[0]?.exists) };
+        } catch (err: any) {
+          result.ok = false;
+          result.checks[tbl] = { ok: false, message: err.message };
+        }
+      }
+    } else {
+      result.checks.persistence = {
+        ok: true,
+        mode: facadeMode,
+        message: "Database checks skipped because file storage mode is active.",
+      };
     }
     return res.status(200).json(result);
   });

@@ -5,7 +5,7 @@ const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
   console.warn(
-    "[db] DATABASE_URL is not set - falling back to in-memory storage."
+    "[db] DATABASE_URL is not set - falling back to JSON file storage."
   );
 }
 

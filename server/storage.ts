@@ -16,6 +16,35 @@ import {
 import { db } from "./db";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
+type PersistedRoutineRecord = Omit<RoutineRecord, "date"> & { date: string };
+type PersistedCustomRoutine = Omit<CustomRoutine, "createdAt" | "updatedAt"> & {
+  createdAt: string;
+  updatedAt: string;
+};
+type PersistedGameScore = Omit<GameScore, "playedAt"> & { playedAt: string };
+type PersistedStorageState = {
+  records: PersistedRoutineRecord[];
+  routines: PersistedCustomRoutine[];
+  steps: CustomRoutineStep[];
+  scores: PersistedGameScore[];
+};
+
+const DEFAULT_RENDER_DATA_DIR = "/var/data";
+
+function getPersistentDataDir(): string {
+  const configured = process.env.ROUTINE_DATA_DIR?.trim();
+  if (configured) return configured;
+  if (process.platform !== "win32" && existsSync(DEFAULT_RENDER_DATA_DIR)) {
+    return DEFAULT_RENDER_DATA_DIR;
+  }
+  return resolve(process.cwd(), "data");
+}
+
+const PERSISTENT_DATA_DIR = getPersistentDataDir();
+const PERSISTENT_STORAGE_PATH = resolve(PERSISTENT_DATA_DIR, "routine-support-storage.json");
 
 export interface IStorage {
   createRoutineRecord(record: InsertRoutineRecord): Promise<RoutineRecord>;
@@ -208,10 +237,12 @@ export class DatabaseStorage implements IStorage {
 }
 
 export class MemoryStorage implements IStorage {
-  private records: RoutineRecord[] = [];
-  private routines = new Map<string, CustomRoutine>();
-  private steps = new Map<string, CustomRoutineStep[]>();
-  private scores: GameScore[] = [];
+  protected records: RoutineRecord[] = [];
+  protected routines = new Map<string, CustomRoutine>();
+  protected steps = new Map<string, CustomRoutineStep[]>();
+  protected scores: GameScore[] = [];
+
+  protected afterMutation(): void {}
 
   async createRoutineRecord(record: InsertRoutineRecord): Promise<RoutineRecord> {
     const newRecord: RoutineRecord = {
@@ -223,6 +254,7 @@ export class MemoryStorage implements IStorage {
       routineType: record.routineType ?? "morning",
     };
     this.records = [newRecord, ...this.records];
+    this.afterMutation();
     return newRecord;
   }
   async getRoutineRecords(): Promise<RoutineRecord[]> {
@@ -277,6 +309,7 @@ export class MemoryStorage implements IStorage {
       imageUrl: s.imageUrl ?? null,
     }));
     this.steps.set(id, stepRows);
+    this.afterMutation();
     return { ...routine, steps: stepRows };
   }
   async updateCustomRoutine(
@@ -307,6 +340,7 @@ export class MemoryStorage implements IStorage {
       }));
       this.steps.set(id, stepRows);
     }
+    this.afterMutation();
     return {
       ...next,
       steps: [...(this.steps.get(id) ?? [])].sort((a, b) => a.order - b.order),
@@ -315,6 +349,7 @@ export class MemoryStorage implements IStorage {
   async deleteCustomRoutine(id: string): Promise<boolean> {
     const existed = this.routines.delete(id);
     this.steps.delete(id);
+    if (existed) this.afterMutation();
     return existed;
   }
   async createGameScore(data: InsertGameScore): Promise<GameScore> {
@@ -329,6 +364,7 @@ export class MemoryStorage implements IStorage {
       playedAt: new Date(),
     };
     this.scores = [row, ...this.scores];
+    this.afterMutation();
     return row;
   }
   async listGameScores(
@@ -349,10 +385,96 @@ export class MemoryStorage implements IStorage {
   }
 }
 
+export class FileStorage extends MemoryStorage {
+  constructor(private readonly filePath = PERSISTENT_STORAGE_PATH) {
+    super();
+    this.loadFromDisk();
+  }
+
+  getFilePath(): string {
+    return this.filePath;
+  }
+
+  protected override afterMutation(): void {
+    this.saveToDisk();
+  }
+
+  private loadFromDisk(): void {
+    try {
+      if (!existsSync(this.filePath)) {
+        return;
+      }
+      const raw = readFileSync(this.filePath, "utf8");
+      if (!raw.trim()) return;
+      const parsed = JSON.parse(raw) as Partial<PersistedStorageState>;
+
+      this.records = (parsed.records ?? []).map((record) => ({
+        ...record,
+        date: new Date(record.date),
+      }));
+
+      this.routines = new Map(
+        (parsed.routines ?? []).map((routine) => [
+          routine.id,
+          {
+            ...routine,
+            createdAt: new Date(routine.createdAt),
+            updatedAt: new Date(routine.updatedAt),
+          },
+        ]),
+      );
+
+      this.steps = new Map<string, CustomRoutineStep[]>();
+      for (const step of parsed.steps ?? []) {
+        const list = this.steps.get(step.routineId) ?? [];
+        list.push(step);
+        this.steps.set(step.routineId, list);
+      }
+
+      this.scores = (parsed.scores ?? []).map((score) => ({
+        ...score,
+        playedAt: new Date(score.playedAt),
+      }));
+
+      console.log(`[storage] loaded JSON storage from ${this.filePath}`);
+    } catch (error) {
+      console.warn("[storage] Failed to load JSON storage, starting empty:", error);
+      this.records = [];
+      this.routines = new Map();
+      this.steps = new Map();
+      this.scores = [];
+    }
+  }
+
+  private saveToDisk(): void {
+    const state: PersistedStorageState = {
+      records: this.records.map((record) => ({
+        ...record,
+        date: new Date(record.date).toISOString(),
+      })),
+      routines: Array.from(this.routines.values()).map((routine) => ({
+        ...routine,
+        createdAt: new Date(routine.createdAt).toISOString(),
+        updatedAt: new Date(routine.updatedAt).toISOString(),
+      })),
+      steps: Array.from(this.steps.values()).flatMap((list) => list),
+      scores: this.scores.map((score) => ({
+        ...score,
+        playedAt: new Date(score.playedAt).toISOString(),
+      })),
+    };
+
+    mkdirSync(dirname(this.filePath), { recursive: true });
+    const tempPath = `${this.filePath}.tmp`;
+    writeFileSync(tempPath, JSON.stringify(state, null, 2), "utf8");
+    renameSync(tempPath, this.filePath);
+  }
+}
+
 export class StorageFacade implements IStorage {
   private dbImpl = new DatabaseStorage();
-  private memImpl = new MemoryStorage();
-  private mode: "unknown" | "db" | "memory" = "unknown";
+  private fileImpl = new FileStorage();
+  private mode: "unknown" | "db" | "file" = "unknown";
   private probe: Promise<void> | null = null;
 
   constructor() {
@@ -363,15 +485,22 @@ export class StorageFacade implements IStorage {
     if (this.mode !== "unknown") return Promise.resolve();
     if (!this.probe) {
       this.probe = (async () => {
+        if (!process.env.DATABASE_URL) {
+          this.mode = "file";
+          console.warn(
+            `[storage] DATABASE_URL is not set - using FileStorage at ${this.fileImpl.getFilePath()}`,
+          );
+          return;
+        }
         try {
           await db.execute(sql`select 1 as one`);
           this.mode = "db";
           console.log("[storage] connected to Postgres - using DatabaseStorage");
         } catch (err: any) {
-          this.mode = "memory";
+          this.mode = "file";
           console.warn(
-            "[storage] Postgres unreachable - using MemoryStorage (data is non-persistent). Reason: " +
-              (err?.message ?? err)
+            "[storage] Postgres unreachable - using FileStorage. Reason: " +
+              (err?.message ?? err),
           );
         }
       })();
@@ -379,13 +508,17 @@ export class StorageFacade implements IStorage {
     return this.probe;
   }
 
-  getMode(): "unknown" | "db" | "memory" {
+  getMode(): "unknown" | "db" | "file" {
     return this.mode;
+  }
+
+  getFallbackStoragePath(): string {
+    return this.fileImpl.getFilePath();
   }
 
   private async pick(): Promise<IStorage> {
     await this.ensureProbed();
-    return this.mode === "db" ? this.dbImpl : this.memImpl;
+    return this.mode === "db" ? this.dbImpl : this.fileImpl;
   }
 
   async createRoutineRecord(record: InsertRoutineRecord) {
